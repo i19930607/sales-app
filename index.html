@@ -362,6 +362,36 @@ var visitRecords=[];
 var hiddenSKUs={};
 var restoredSKUs={};
 
+
+// ── XGBoost 預測結果載入 ──────────────────────────────────
+var _xgbPredictions = null;
+var _xgbLoadedAt = null;
+
+function loadXGBPredictions(){
+  // 從 GitHub repo 的 predictions.json 讀取
+  // 路徑：https://i19930607.github.io/sales-app/predictions.json
+  var url = window.location.origin + window.location.pathname.replace('index.html','') + 'predictions.json';
+  fetch(url)
+    .then(function(r){
+      if(!r.ok) throw new Error('not found');
+      return r.json();
+    })
+    .then(function(data){
+      _xgbPredictions = data.predictions;
+      _xgbLoadedAt = data.generated_at;
+      console.log('XGBoost 預測載入，產生時間：' + _xgbLoadedAt);
+    })
+    .catch(function(){
+      console.log('predictions.json 尚未建立，使用規則預測');
+    });
+}
+
+function getXGBPred(storeId, skuId){
+  if(!_xgbPredictions || !_xgbPredictions[storeId]) return null;
+  var found = _xgbPredictions[storeId].filter(function(s){ return s.sku_id === skuId; });
+  return found.length > 0 ? found[0].xgb_pred : null;
+}
+
 // ── 商圈設定 ───────────────────────────────────────────────
 var DEFAULT_ZONES={"S001": "mixed", "S002": "school", "S003": "mixed", "S004": "residential", "S005": "residential", "S006": "residential", "S007": "school", "S008": "industrial", "S009": "residential", "S010": "residential", "S011": "residential", "S012": "residential", "S013": "residential", "S014": "residential", "S015": "industrial", "S016": "industrial", "S017": "residential", "S018": "residential", "S019": "industrial", "S020": "residential", "S021": "mixed", "S022": "industrial", "S023": "residential", "S024": "residential", "S025": "residential", "S026": "school", "S027": "school", "S028": "residential", "S029": "industrial", "S030": "residential", "S031": "school", "S032": "industrial", "S033": "school", "S034": "school", "S035": "school", "S036": "industrial", "S037": "industrial", "S038": "school", "S039": "school", "S040": "school", "S041": "school", "S042": "school", "S043": "industrial", "S044": "school", "S045": "school", "S046": "school", "S047": "school", "S048": "school", "S049": "school", "S050": "industrial", "S051": "school", "S052": "mixed", "S053": "school", "S054": "mixed", "S055": "mixed", "S056": "school"};
 var ZONE_COEFF={
@@ -471,28 +501,88 @@ function renderZoneBtns(sid){
   });
 }
 
-function renderWeather(){
-  var labels=["今天","明天","後天","週四","週五","週六","週日"];
-  var icons=["☀️","⛅","🌧","🌤","☀️","🌧","⛅"];
-  var tmax=[28,27,24,29,31,26,25];
-  var tmin=[22,21,20,23,24,20,20];
-  var rain=[0,0,12,0,0,18,5];
+// ── 天氣快取 ─────────────────────────────────────────────
+var _weatherCache=null;
+var _weatherRegion=null;
+var REGION_COORDS={
+  taipei:     {lat:25.048,lon:121.531},
+  new_taipei: {lat:25.012,lon:121.465},
+  taoyuan:    {lat:24.993,lon:121.301},
+  hsinchu:    {lat:24.807,lon:120.968},
+  miaoli:     {lat:24.560,lon:120.820}
+};
+function getWeatherIcon(c){
+  if(c<=1)return "☀️";
+  if(c<=3)return "⛅";
+  if(c<=49)return "🌫";
+  if(c<=65)return "🌧";
+  if(c<=77)return "❄️";
+  if(c<=82)return "🌧";
+  return "⛈";
+}
+function renderWeatherUI(days){
   var html="";
-  for(var i=0;i<7;i++){
+  for(var i=0;i<days.length;i++){
+    var w=days[i];
     html+="<div class=\"weather-day\">";
-    html+="<div style=\"font-size:11px;color:var(--text3)\">"+labels[i]+"</div>";
-    html+="<div style=\"font-size:20px;margin:3px 0\">"+icons[i]+"</div>";
-    html+="<div style=\"font-size:13px;font-weight:500\">"+tmax[i]+"° / "+tmin[i]+"°</div>";
-    if(rain[i]>0){html+="<div style=\"font-size:11px;color:var(--accent)\">雨 "+rain[i]+"mm</div>";}
+    html+="<div style=\"font-size:11px;color:var(--text3)\">"+w.label+"</div>";
+    html+="<div style=\"font-size:20px;margin:3px 0\">"+w.icon+"</div>";
+    html+="<div style=\"font-size:13px;font-weight:500\">"+w.tmax+"°/"+w.tmin+"°</div>";
+    html+="<div style=\"font-size:10px;color:var(--text3)\">濕"+w.humid+"%</div>";
+    html+=(w.rain>0?"<div style=\"font-size:11px;color:var(--accent)\">雨"+w.rain+"mm</div>":"<div style=\"height:14px\"></div>");
     html+="</div>";
   }
   document.getElementById("weather-strip").innerHTML=html;
-  var hot=tmax[0]>=31||tmax[1]>=31||tmax[2]>=31;
-  var wet=rain[0]>=10||rain[1]>=10||rain[2]>=10;
-  var alerts="";
-  if(hot)alerts+="<span class=\"badge badge-amber\" style=\"margin-right:6px\">高溫 ≥31° — 飲料水類需求偏高</span>";
-  if(wet)alerts+="<span class=\"badge badge-blue\">降雨預報 — 戶外消耗型需求偏低</span>";
-  document.getElementById("weather-alert").innerHTML=alerts;
+  var hot=days[0].tmax>=31||days[1].tmax>=31||(days[2]&&days[2].tmax>=31);
+  var wet=days[0].rain>=10||days[1].rain>=10||(days[2]&&days[2].rain>=10);
+  var hmd=days[0].humid>=80||days[1].humid>=80||(days[2]&&days[2].humid>=80);
+  var al="";
+  if(hot)al+="<span class=\"badge badge-amber\" style=\"margin-right:6px\">高溫≥31° — 飲料水類需求偏高</span>";
+  if(wet)al+="<span class=\"badge badge-blue\" style=\"margin-right:6px\">降雨預報 — 戶外消耗需求偏低</span>";
+  if(hmd)al+="<span class=\"badge badge-blue\">高濕≥80% — 清涼飲料需求略升</span>";
+  document.getElementById("weather-alert").innerHTML=al;
+}
+function renderWeatherFallback(){
+  renderWeatherUI([
+    {label:"今天",tmax:28,tmin:22,rain:0, humid:65,icon:"☀️"},
+    {label:"明天",tmax:27,tmin:21,rain:0, humid:68,icon:"⛅"},
+    {label:"後天",tmax:24,tmin:20,rain:12,humid:85,icon:"🌧"},
+    {label:"週四", tmax:29,tmin:23,rain:0, humid:60,icon:"🌤"},
+    {label:"週五", tmax:31,tmin:24,rain:0, humid:55,icon:"☀️"},
+    {label:"週六", tmax:26,tmin:20,rain:18,humid:80,icon:"🌧"},
+    {label:"週日", tmax:25,tmin:20,rain:5, humid:75,icon:"⛅"}
+  ]);
+}
+function renderWeather(){
+  var store=STORES.filter(function(s){return s.id===currentStoreId;})[0];
+  var region=store?store.region:"taoyuan";
+  var coord=REGION_COORDS[region]||REGION_COORDS.taoyuan;
+  if(_weatherCache&&_weatherRegion===region){renderWeatherUI(_weatherCache);return;}
+  document.getElementById("weather-strip").innerHTML="<div style=\"color:var(--text3);font-size:12px;padding:10px\">天氣載入中...</div>";
+  var url="https://api.open-meteo.com/v1/forecast?latitude="+coord.lat+"&longitude="+coord.lon
+    +"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,relativehumidity_2m_mean,weathercode"
+    +"&timezone=Asia%2FTaipei&forecast_days=7";
+  fetch(url)
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var d=data.daily;
+      var dayNames=["日","一","二","三","四","五","六"];
+      var days=[];
+      for(var i=0;i<7;i++){
+        var dt=new Date(d.time[i]);
+        days.push({
+          label:i===0?"今天":i===1?"明天":"週"+dayNames[dt.getDay()],
+          tmax:Math.round(d.temperature_2m_max[i]),
+          tmin:Math.round(d.temperature_2m_min[i]),
+          rain:Math.round(d.precipitation_sum[i]*10)/10,
+          humid:Math.round(d.relativehumidity_2m_mean[i]),
+          icon:getWeatherIcon(d.weathercode[i])
+        });
+      }
+      _weatherCache=days;_weatherRegion=region;
+      renderWeatherUI(days);
+    })
+    .catch(function(){renderWeatherFallback();});
 }
 
 function renderSkuList(containerId,storeId,prefix){
@@ -530,12 +620,13 @@ function calcPrediction(){
   var today=new Date();
   var month=today.getMonth()+1;
   var isMonthEnd=today.getDate()>=25;
-  var tmax=[28,27,24,29,31,26,25];
-  var rain=[0,0,12,0,0,18,5];
-  var humid=[65,68,85,60,55,80,75];
-  var wHot=tmax[0]>=31||tmax[1]>=31||tmax[2]>=31;
-  var wWet=rain[0]>=10||rain[1]>=10||rain[2]>=10;
-  var wHumid=humid[0]>=80||humid[1]>=80||humid[2]>=80;
+  // 使用真實天氣快取，fallback 用模擬值
+  var _wd = _weatherCache || [
+    {tmax:28,rain:0,humid:65},{tmax:27,rain:0,humid:68},{tmax:24,rain:12,humid:85}
+  ];
+  var wHot   = _wd[0].tmax>=31||_wd[1].tmax>=31||(_wd[2]&&_wd[2].tmax>=31);
+  var wWet   = _wd[0].rain>=10||_wd[1].rain>=10||(_wd[2]&&_wd[2].rain>=10);
+  var wHumid = _wd[0].humid>=80||_wd[1].humid>=80||(_wd[2]&&_wd[2].humid>=80);
   var results=[];
   for(var i=0;i<skus.length;i++){
     var s=skus[i];
@@ -544,7 +635,10 @@ function calcPrediction(){
     var recent=s.recent_avg||0;
     var ly=s.ly_avg||recent;
     var py=s.py_avg||recent;
-    var base=recent*0.5+ly*0.3+py*0.2;
+    // 如果有 XGBoost 預測，用 XGB 70% + 規則 30%
+    var ruleBase=recent*0.5+ly*0.3+py*0.2;
+    var xgbPred=getXGBPred(currentStoreId,s.sku_id);
+    var base=xgbPred!==null?(xgbPred*0.7+ruleBase*0.3):ruleBase;
     var factor=1.0;
     var reasons=[];
     var isDrink=/水|飲料|茶|涼茶|可爾必思|汽水/.test(s.sku_name);
@@ -595,7 +689,8 @@ function renderResults(results,zoneLabel){
   var cnt=results.filter(function(r){return r.suggestion>0;}).length;
   document.getElementById("result-insight").innerHTML=
     "<strong style=\"color:var(--text)\">本次摘要</strong> <span class=\"badge badge-blue\">"+zoneLabel+"</span><br>"
-    +"共 "+cnt+" 項建議補貨。基準：近90天50% + 去年30% + 前年20%，依天氣、商圈、季節調整。";
+    +(_xgbPredictions?"<span class=\"badge badge-green\" style=\"margin-right:6px\">XGBoost 模型</span>":"")
+    +"共 "+cnt+" 項建議補貨。"+(_xgbPredictions?"XGBoost 70% + 規則 30%":"規則預測：近90天50% + 去年30% + 前年20%")+"，依天氣、商圈、季節調整。";
   document.getElementById("card-result").scrollIntoView({behavior:"smooth"});
 }
 
@@ -1286,7 +1381,7 @@ function exportPDF(){
 }
 
 
-try{init();}catch(e){console.error("init:",e);}
+try{init();loadXGBPredictions();}catch(e){console.error("init:",e);}
 </script>
 <script>
 var STORE_SKUS_DATA={};
