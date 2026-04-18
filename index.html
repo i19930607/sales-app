@@ -104,7 +104,7 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px" id="zone-btns"></div>
   </div>
   <div class="card" id="card-weather" style="display:none">
-    <div class="card-title">本週天氣預報</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="card-title" style="margin:0">本週天氣預報</div><span id="weather-source" style="font-size:10px;color:var(--text3)"></span></div>
     <div class="weather-strip" id="weather-strip"></div>
     <div id="weather-alert" style="margin-top:8px"></div>
   </div>
@@ -569,29 +569,36 @@ function renderWeather(){
   var url="https://api.open-meteo.com/v1/forecast?latitude="+coord.lat+"&longitude="+coord.lon
     +"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weathercode"
     +"&timezone=Asia%2FTaipei&forecast_days=7";
-  console.log("天氣 API 請求：", region, url);
   fetch(url)
-    .then(function(r){return r.json();})
+    .then(function(r){
+      if(!r.ok)throw new Error(r.status);
+      return r.json();
+    })
     .then(function(data){
-      console.log("天氣 API 成功：", region, data.daily?data.daily.temperature_2m_max:data);
       var d=data.daily;
+      if(!d||!d.temperature_2m_max)throw new Error("bad data");
       var dayNames=["日","一","二","三","四","五","六"];
       var days=[];
       for(var i=0;i<7;i++){
         var dt=new Date(d.time[i]);
+        var mm=dt.getMonth()+1; var dd=dt.getDate();
+        var dl=i===0?"今天":i===1?"明天":"週"+dayNames[dt.getDay()];
         days.push({
-          label:i===0?"今天":i===1?"明天":"週"+dayNames[dt.getDay()],
+          label:dl+" "+mm+"/"+dd,
           tmax:Math.round(d.temperature_2m_max[i]),
           tmin:Math.round(d.temperature_2m_min[i]),
           rain:Math.round(d.precipitation_sum[i]*10)/10,
-          humid:Math.round(d.relativehumidity_2m_mean[i]),
+          rainProb:Math.round(d.precipitation_probability_max[i]||0),
           icon:getWeatherIcon(d.weathercode[i])
         });
       }
       _weatherCache[region]=days;
       renderWeatherUI(days);
     })
-    .catch(function(e){console.error("天氣 API 失敗：", region, e);renderWeatherFallback();});
+    .catch(function(e){
+      console.warn("Open-Meteo failed:",e,"using fallback");
+      renderWeatherFallback();
+    });
 }
 
 function renderSkuList(containerId,storeId,prefix){
