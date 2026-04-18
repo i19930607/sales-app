@@ -2,18 +2,21 @@ name: Update Weather Daily
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # 每天台灣時間早上 6 點（UTC 22:00）
-  workflow_dispatch:        # 也可以手動觸發
+    - cron: '0 22 * * *'  # 每天台灣時間早上 6 點
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   update-weather:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
