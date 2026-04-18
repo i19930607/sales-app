@@ -562,13 +562,19 @@ function renderWeatherFallback(){
 }
 function renderWeather(){
   var store=STORES.filter(function(s){return s.id===currentStoreId;})[0];
-  var region=store?store.region:"taoyuan";
-  var coord=REGION_COORDS[region]||REGION_COORDS.taoyuan;
-  if(_weatherCache[region]){renderWeatherUI(_weatherCache[region]);return;}
+  if(!store){renderWeatherFallback();return;}
+
+  // 直接用各店精確座標，不分地區
+  var lat=store.lat, lon=store.lon;
+  var cacheKey=currentStoreId;
+
+  if(_weatherCache[cacheKey]){renderWeatherUI(_weatherCache[cacheKey]);return;}
   document.getElementById("weather-strip").innerHTML="<div style=\"color:var(--text3);font-size:12px;padding:10px\">天氣載入中...</div>";
-  var url="https://api.open-meteo.com/v1/forecast?latitude="+coord.lat+"&longitude="+coord.lon
+
+  var url="https://api.open-meteo.com/v1/forecast?latitude="+lat+"&longitude="+lon
     +"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weathercode"
     +"&timezone=Asia%2FTaipei&forecast_days=7";
+
   fetch(url)
     .then(function(r){
       if(!r.ok)throw new Error(r.status);
@@ -592,11 +598,11 @@ function renderWeather(){
           icon:getWeatherIcon(d.weathercode[i])
         });
       }
-      _weatherCache[region]=days;
+      _weatherCache[cacheKey]=days;
       renderWeatherUI(days);
     })
     .catch(function(e){
-      console.warn("Open-Meteo failed:",e,"using fallback");
+      console.warn("Weather API failed:",store.name,e);
       renderWeatherFallback();
     });
 }
@@ -637,10 +643,8 @@ function calcPrediction(){
   var month=today.getMonth()+1;
   var isMonthEnd=today.getDate()>=25;
   // 使用真實天氣快取，fallback 用模擬值
-  var store=STORES.filter(function(s){return s.id===currentStoreId;})[0];
-  var _region=store?store.region:"taoyuan";
-  var _wd = _weatherCache[_region] || [
-    {tmax:28,rain:0,humid:65},{tmax:27,rain:0,humid:68},{tmax:24,rain:12,humid:85}
+  var _wd = _weatherCache[currentStoreId] || [
+    {tmax:28,rain:0,rainProb:20},{tmax:27,rain:0,rainProb:20},{tmax:24,rain:12,rainProb:70}
   ];
   var wHot   = _wd[0].tmax>=31||_wd[1].tmax>=31||(_wd[2]&&_wd[2].tmax>=31);
   var wWet   = _wd[0].rain>=10||_wd[1].rain>=10||(_wd[2]&&_wd[2].rain>=10);
