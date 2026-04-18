@@ -569,9 +569,11 @@ function renderWeather(){
   var url="https://api.open-meteo.com/v1/forecast?latitude="+coord.lat+"&longitude="+coord.lon
     +"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weathercode"
     +"&timezone=Asia%2FTaipei&forecast_days=7";
+  console.log("天氣 API 請求：", region, url);
   fetch(url)
     .then(function(r){return r.json();})
     .then(function(data){
+      console.log("天氣 API 成功：", region, data.daily?data.daily.temperature_2m_max:data);
       var d=data.daily;
       var dayNames=["日","一","二","三","四","五","六"];
       var days=[];
@@ -589,7 +591,7 @@ function renderWeather(){
       _weatherCache[region]=days;
       renderWeatherUI(days);
     })
-    .catch(function(){renderWeatherFallback();});
+    .catch(function(e){console.error("天氣 API 失敗：", region, e);renderWeatherFallback();});
 }
 
 function renderSkuList(containerId,storeId,prefix){
