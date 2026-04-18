@@ -1,0 +1,32 @@
+name: Update Weather Daily
+
+on:
+  schedule:
+    - cron: '0 22 * * *'  # 每天台灣時間早上 6 點（UTC 22:00）
+  workflow_dispatch:        # 也可以手動觸發
+
+jobs:
+  update-weather:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install requests
+        run: pip install requests
+
+      - name: Fetch weather data
+        run: python fetch_weather.py
+
+      - name: Commit and push weather.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add weather.json
+          git diff --staged --quiet || git commit -m "Update weather $(date '+%Y-%m-%d %H:%M')"
+          git push
