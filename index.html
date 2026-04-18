@@ -536,18 +536,16 @@ function renderWeatherUI(days){
     html+="<div style=\"font-size:11px;color:var(--text3)\">"+w.label+"</div>";
     html+="<div style=\"font-size:20px;margin:3px 0\">"+w.icon+"</div>";
     html+="<div style=\"font-size:13px;font-weight:500\">"+w.tmax+"°/"+w.tmin+"°</div>";
-    html+="<div style=\"font-size:10px;color:var(--text3)\">濕"+w.humid+"%</div>";
+    html+="<div style=\"font-size:10px;color:var(--text3)\">降雨"+w.rainProb+"%</div>";
     html+=(w.rain>0?"<div style=\"font-size:11px;color:var(--accent)\">雨"+w.rain+"mm</div>":"<div style=\"height:14px\"></div>");
     html+="</div>";
   }
   document.getElementById("weather-strip").innerHTML=html;
   var hot=days[0].tmax>=31||days[1].tmax>=31||(days[2]&&days[2].tmax>=31);
   var wet=days[0].rain>=10||days[1].rain>=10||(days[2]&&days[2].rain>=10);
-  var hmd=days[0].humid>=80||days[1].humid>=80||(days[2]&&days[2].humid>=80);
   var al="";
   if(hot)al+="<span class=\"badge badge-amber\" style=\"margin-right:6px\">高溫≥31° — 飲料水類需求偏高</span>";
-  if(wet)al+="<span class=\"badge badge-blue\" style=\"margin-right:6px\">降雨預報 — 戶外消耗需求偏低</span>";
-  if(hmd)al+="<span class=\"badge badge-blue\">高濕≥80% — 清涼飲料需求略升</span>";
+  if(wet)al+="<span class=\"badge badge-blue\">降雨預報 — 戶外消耗需求偏低</span>";
   document.getElementById("weather-alert").innerHTML=al;
 }
 function renderWeatherFallback(){
@@ -558,7 +556,7 @@ function renderWeatherFallback(){
     var _d = new Date(_today); _d.setDate(_today.getDate()+_i);
     var _mm = _d.getMonth()+1; var _dd = _d.getDate();
     var _dl = _i===0?"今天":_i===1?"明天":"週"+_days[_d.getDay()];
-    _wdata.push({label:_dl+" "+_mm+"/"+_dd,tmax:28+_i%3,tmin:21,rain:_i===2?12:0,humid:70,icon:_i===2?"🌧":"☀️"});
+    _wdata.push({label:_dl+" "+_mm+"/"+_dd,tmax:28+_i%3,tmin:21,rain:_i===2?12:0,rainProb:_i===2?70:20,icon:_i===2?"🌧":"☀️"});
   }
   renderWeatherUI(_wdata);
 }
@@ -569,7 +567,7 @@ function renderWeather(){
   if(_weatherCache[region]){renderWeatherUI(_weatherCache[region]);return;}
   document.getElementById("weather-strip").innerHTML="<div style=\"color:var(--text3);font-size:12px;padding:10px\">天氣載入中...</div>";
   var url="https://api.open-meteo.com/v1/forecast?latitude="+coord.lat+"&longitude="+coord.lon
-    +"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,relativehumidity_2m_mean,weathercode"
+    +"&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weathercode"
     +"&timezone=Asia%2FTaipei&forecast_days=7";
   fetch(url)
     .then(function(r){return r.json();})
@@ -637,7 +635,7 @@ function calcPrediction(){
   ];
   var wHot   = _wd[0].tmax>=31||_wd[1].tmax>=31||(_wd[2]&&_wd[2].tmax>=31);
   var wWet   = _wd[0].rain>=10||_wd[1].rain>=10||(_wd[2]&&_wd[2].rain>=10);
-  var wHumid = _wd[0].humid>=80||_wd[1].humid>=80||(_wd[2]&&_wd[2].humid>=80);
+  var wHumid = _wd[0].rainProb>=70||_wd[1].rainProb>=70||(_wd[2]&&_wd[2].rainProb>=70);
   var results=[];
   for(var i=0;i<skus.length;i++){
     var s=skus[i];
