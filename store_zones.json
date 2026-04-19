@@ -1,674 +1,674 @@
 {
   "S001": {
     "name": "寧夏店",
-    "zone": "residential",
+    "zone": "school",
     "ratios": {
-      "residential": 54,
-      "commercial": 40,
-      "industrial": 1,
-      "school": 0,
-      "office": 4
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 671
+    "total_poi": 20
   },
   "S002": {
     "name": "東湖店",
-    "zone": "residential",
+    "zone": "school",
     "ratios": {
-      "residential": 83,
-      "commercial": 4,
-      "industrial": 13,
-      "school": 0,
-      "office": 0
+      "residential": 25,
+      "commercial": 25,
+      "industrial": 0,
+      "school": 25,
+      "office": 25
     },
-    "total_poi": 141
+    "total_poi": 0
   },
   "S003": {
     "name": "康定店",
-    "zone": "residential",
+    "zone": "school",
     "ratios": {
-      "residential": 53,
-      "commercial": 43,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 0,
-      "office": 4
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 438
+    "total_poi": 20
   },
   "S004": {
     "name": "三重店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S005": {
     "name": "中和店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 33,
-      "commercial": 61,
-      "industrial": 2,
-      "school": 0,
-      "office": 4
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 302
+    "total_poi": 16
   },
   "S006": {
     "name": "竹林店",
-    "zone": "residential",
+    "zone": "school",
     "ratios": {
-      "residential": 74,
-      "commercial": 24,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 0,
-      "office": 2
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 202
+    "total_poi": 20
   },
   "S007": {
     "name": "中正店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S008": {
     "name": "泰山店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 1
   },
   "S009": {
     "name": "仁愛店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 44,
-      "commercial": 52,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 0,
-      "office": 4
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 323
+    "total_poi": 20
   },
   "S010": {
     "name": "民族店",
-    "zone": "residential",
+    "zone": "school",
     "ratios": {
-      "residential": 71,
-      "commercial": 27,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 0,
-      "office": 2
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 241
+    "total_poi": 20
   },
   "S011": {
     "name": "福和店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S012": {
     "name": "長安店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S013": {
     "name": "景新店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S014": {
     "name": "雨農店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S015": {
     "name": "林口店",
-    "zone": "residential",
+    "zone": "school",
     "ratios": {
-      "residential": 89,
-      "commercial": 8,
-      "industrial": 1,
-      "school": 1,
-      "office": 1
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 149
+    "total_poi": 20
   },
   "S016": {
     "name": "林口中正店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S017": {
     "name": "長江店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S018": {
     "name": "三重自強店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S019": {
     "name": "泰林店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S020": {
     "name": "汐止店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 5
   },
   "S021": {
     "name": "新莊四維店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S022": {
     "name": "泰山仁愛店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 3
   },
   "S023": {
     "name": "三峽中華店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S024": {
     "name": "中和安平店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 18
   },
   "S025": {
     "name": "土城中央店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 16
   },
   "S026": {
     "name": "新莊中港店",
-    "zone": "residential",
+    "zone": "school",
     "ratios": {
-      "residential": 89,
-      "commercial": 10,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 1,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 87
+    "total_poi": 7
   },
   "S027": {
     "name": "新莊中港二店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S028": {
     "name": "板橋中正店",
-    "zone": "residential",
+    "zone": "school",
     "ratios": {
-      "residential": 69,
-      "commercial": 27,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 0,
-      "office": 4
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 299
+    "total_poi": 20
   },
   "S029": {
     "name": "五股新五店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 8
   },
   "S030": {
     "name": "板橋府中店",
-    "zone": "residential",
+    "zone": "school",
     "ratios": {
-      "residential": 57,
-      "commercial": 39,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 0,
-      "office": 4
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 244
+    "total_poi": 20
   },
   "S031": {
     "name": "大有店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 30,
-      "commercial": 34,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 2,
-      "office": 35
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 200
+    "total_poi": 20
   },
   "S032": {
     "name": "龜山店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 1
   },
   "S033": {
     "name": "忠孝店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S034": {
     "name": "北埔店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 13
   },
   "S035": {
     "name": "龍岡店",
-    "zone": "residential",
+    "zone": "school",
     "ratios": {
-      "residential": 62,
-      "commercial": 28,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 2,
-      "office": 8
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 50
+    "total_poi": 8
   },
   "S036": {
     "name": "廣明店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 6
   },
   "S037": {
     "name": "大園店",
-    "zone": "industrial",
+    "zone": "school",
     "ratios": {
-      "residential": 44,
-      "commercial": 2,
-      "industrial": 52,
-      "school": 2,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 50
+    "total_poi": 1
   },
   "S038": {
     "name": "八德店",
-    "zone": "residential",
+    "zone": "school",
     "ratios": {
-      "residential": 70,
-      "commercial": 28,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 0,
-      "office": 2
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 87
+    "total_poi": 9
   },
   "S039": {
     "name": "榮民店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 8
   },
   "S040": {
     "name": "桃園三民店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S041": {
     "name": "桃園永安店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 9
   },
   "S042": {
     "name": "桃園大業店",
-    "zone": "residential",
+    "zone": "school",
     "ratios": {
-      "residential": 80,
-      "commercial": 13,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 1,
-      "office": 6
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 190
+    "total_poi": 19
   },
   "S043": {
     "name": "蘆竹大新店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
       "residential": 25,
       "commercial": 25,
-      "industrial": 25,
+      "industrial": 0,
       "school": 25,
-      "office": 0
+      "office": 25
     },
     "total_poi": 0
   },
   "S044": {
     "name": "桃園萬壽店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 4
   },
   "S045": {
     "name": "中壢中原店",
-    "zone": "residential",
+    "zone": "school",
     "ratios": {
-      "residential": 63,
-      "commercial": 30,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 3,
-      "office": 4
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 79
+    "total_poi": 20
   },
   "S046": {
     "name": "桃園永安二店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 17
   },
   "S047": {
     "name": "中豐店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 9
   },
   "S048": {
     "name": "復興店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S049": {
     "name": "西大店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 43,
-      "commercial": 47,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 1,
-      "office": 10
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 326
+    "total_poi": 20
   },
   "S050": {
     "name": "大庄店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 34,
-      "commercial": 33,
+      "residential": 25,
+      "commercial": 25,
       "industrial": 0,
-      "school": 0,
-      "office": 33
+      "school": 25,
+      "office": 25
     },
     "total_poi": 0
   },
   "S051": {
     "name": "新竹西大二店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 20
   },
   "S052": {
     "name": "自強南店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 16,
-      "commercial": 65,
-      "industrial": 6,
-      "school": 2,
-      "office": 11
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 176
+    "total_poi": 10
   },
   "S053": {
     "name": "竹北民權店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 15,
-      "commercial": 73,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 2,
-      "office": 10
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 189
+    "total_poi": 15
   },
   "S054": {
     "name": "頭份店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 19
   },
   "S055": {
     "name": "苗栗中正店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 25,
-      "commercial": 25,
-      "industrial": 25,
-      "school": 25,
+      "residential": 0,
+      "commercial": 0,
+      "industrial": 0,
+      "school": 100,
       "office": 0
     },
-    "total_poi": 0
+    "total_poi": 13
   },
   "S056": {
     "name": "苗栗縣府店",
-    "zone": "mixed",
+    "zone": "school",
     "ratios": {
-      "residential": 45,
-      "commercial": 34,
+      "residential": 0,
+      "commercial": 0,
       "industrial": 0,
-      "school": 2,
-      "office": 19
+      "school": 100,
+      "office": 0
     },
-    "total_poi": 47
+    "total_poi": 18
   }
 }
