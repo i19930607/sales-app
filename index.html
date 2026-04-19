@@ -257,10 +257,20 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
 <div class="page" id="page-record">
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div class="card-title" style="margin:0">今日抄貨紀錄</div>
+      <div class="card-title" style="margin:0">抄貨紀錄</div>
       <span class="badge badge-green" id="rec-today"></span>
     </div>
-    <select id="sel-record" onchange="onRecordStore()"></select>
+    <div style="margin-bottom:10px">
+      <label style="font-size:12px;color:var(--text2)">門市</label>
+      <select id="sel-record" onchange="onRecordStore()"></select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end">
+      <div>
+        <label style="font-size:12px;color:var(--text2)">抄貨日期</label>
+        <input type="date" id="rec-date" style="width:100%">
+      </div>
+      <div id="rec-last-visit" style="font-size:11px;color:var(--text3);padding-bottom:8px"></div>
+    </div>
   </div>
   <div id="record-form" style="display:none">
     <div class="card">
@@ -1217,6 +1227,20 @@ function onRecordStore(){
   if(!recStoreId)return;
   document.getElementById("record-form").style.display="block";
   renderSkuList("rec-sku-list",recStoreId,"rec");
+
+  // 設定預設日期為今天
+  var today=new Date();
+  var ds=today.getFullYear()+"-"+(String(today.getMonth()+1).padStart(2,"0"))+"-"+(String(today.getDate()).padStart(2,"0"));
+  document.getElementById("rec-date").value=ds;
+
+  // 顯示上次抄貨時間
+  var lastRec=visitRecords.filter(function(r){return r.store_id===recStoreId;})[0];
+  var lastEl=document.getElementById("rec-last-visit");
+  if(lastRec){
+    lastEl.innerHTML="上次抄貨：<strong>"+lastRec.date+"</strong>（"+lastRec.items.length+" 項）";
+  } else {
+    lastEl.innerHTML="尚無抄貨紀錄";
+  }
 }
 
 function clearRecForm(){
@@ -1237,8 +1261,9 @@ function saveRecord(){
     }
   });
   if(items.length===0){alert("請至少輸入一項數量");return;}
+  var recDateEl=document.getElementById("rec-date");
   var today=new Date();
-  var ds=today.getFullYear()+"-"+(String(today.getMonth()+1).padStart(2,"0"))+"-"+(String(today.getDate()).padStart(2,"0"));
+  var ds=recDateEl&&recDateEl.value?recDateEl.value:(today.getFullYear()+"-"+(String(today.getMonth()+1).padStart(2,"0"))+"-"+(String(today.getDate()).padStart(2,"0")));
   var note=document.getElementById("rec-note").value.trim();
   visitRecords=visitRecords.filter(function(r){return !(r.date===ds&&r.store_id===recStoreId);});
   visitRecords.unshift({date:ds,store_id:recStoreId,store_name:store.name,items:items,note:note});
@@ -1260,7 +1285,8 @@ function renderRecHistory(){
     html+="<div style=\"font-size:14px;font-weight:500\">"+r.store_name+"</div>";
     html+="<div style=\"display:flex;gap:8px;align-items:center\">";
     html+="<span style=\"font-size:11px;color:var(--text3)\">"+r.date+"</span>";
-    html+="<button class=\"btn btn-sm btn-ghost\" data-act=\"delr\" data-date=\""+r.date+"\" data-rsid=\""+r.store_id+"\">刪除</button>";
+    html+="<button class=\"btn btn-sm btn-ghost\" data-act=\"editr\" data-idx=\""+i+"\">修改</button>";
+    html+="<button class=\"btn btn-sm btn-ghost\" style=\"color:var(--red)\" data-act=\"delr\" data-date=\""+r.date+"\" data-rsid=\""+r.store_id+"\">刪除</button>";
     html+="</div></div>";
     for(var j=0;j<Math.min(4,r.items.length);j++){
       var it=r.items[j];
@@ -1319,8 +1345,31 @@ document.addEventListener("click",function(e){
   }
   if(act==="delr"){
     var date=el.dataset.date,rsid=el.dataset.rsid;
+    if(!confirm("確定刪除 "+date+" 的紀錄？"))return;
     visitRecords=visitRecords.filter(function(r){return !(r.date===date&&r.store_id===rsid);});
     saveVRecs();renderRecHistory();
+  }
+  if(act==="editr"){
+    var idx=parseInt(el.dataset.idx);
+    var rec=visitRecords[idx];
+    if(!rec)return;
+    // 載入該筆紀錄到表單
+    recStoreId=rec.store_id;
+    document.getElementById("sel-record").value=rec.store_id;
+    document.getElementById("rec-date").value=rec.date;
+    document.getElementById("record-form").style.display="block";
+    renderSkuList("rec-sku-list",rec.store_id,"rec");
+    // 填入原本的叫貨量
+    setTimeout(function(){
+      rec.items.forEach(function(it){
+        var el2=document.getElementById("ro-"+it.id);
+        if(el2)el2.value=it.ordered;
+      });
+      var noteEl=document.getElementById("rec-note");
+      if(noteEl)noteEl.value=rec.note||"";
+    },100);
+    // 捲動到表單
+    document.getElementById("record-form").scrollIntoView({behavior:"smooth"});
   }
 });
 
