@@ -102,6 +102,7 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
       <span class="badge badge-blue" id="zone-badge"></span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px" id="zone-btns"></div>
+    <div id="zone-info" style="display:none"></div>
   </div>
   <div class="card" id="card-weather" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="card-title" style="margin:0">本週天氣預報</div><span id="weather-source" style="font-size:10px;color:var(--text3)"></span></div>
@@ -392,7 +393,7 @@ function getXGBPred(storeId, skuId){
 }
 
 // ── 商圈設定 ───────────────────────────────────────────────
-var DEFAULT_ZONES={"S001": "mixed", "S002": "school", "S003": "mixed", "S004": "residential", "S005": "residential", "S006": "residential", "S007": "school", "S008": "industrial", "S009": "residential", "S010": "residential", "S011": "residential", "S012": "residential", "S013": "residential", "S014": "residential", "S015": "industrial", "S016": "industrial", "S017": "residential", "S018": "residential", "S019": "industrial", "S020": "residential", "S021": "mixed", "S022": "industrial", "S023": "residential", "S024": "residential", "S025": "residential", "S026": "school", "S027": "school", "S028": "residential", "S029": "industrial", "S030": "residential", "S031": "school", "S032": "industrial", "S033": "school", "S034": "school", "S035": "school", "S036": "industrial", "S037": "industrial", "S038": "school", "S039": "school", "S040": "school", "S041": "school", "S042": "school", "S043": "industrial", "S044": "school", "S045": "school", "S046": "school", "S047": "school", "S048": "school", "S049": "school", "S050": "industrial", "S051": "school", "S052": "mixed", "S053": "school", "S054": "mixed", "S055": "mixed", "S056": "school"};
+var DEFAULT_ZONES={"S001": "mixed", "S002": "industrial", "S003": "residential", "S004": "residential", "S005": "residential", "S006": "residential", "S007": "school", "S008": "school", "S009": "residential", "S010": "mixed", "S011": "residential", "S012": "residential", "S013": "residential", "S014": "residential", "S015": "mixed", "S016": "school", "S017": "residential", "S018": "residential", "S019": "industrial", "S020": "mixed", "S021": "residential", "S022": "industrial", "S023": "mixed", "S024": "residential", "S025": "mixed", "S026": "industrial", "S027": "industrial", "S028": "mixed", "S029": "industrial", "S030": "mixed", "S031": "residential", "S032": "mixed", "S033": "school", "S034": "residential", "S035": "mixed", "S036": "industrial", "S037": "industrial", "S038": "mixed", "S039": "residential", "S040": "mixed", "S041": "residential", "S042": "mixed", "S043": "industrial", "S044": "residential", "S045": "school", "S046": "residential", "S047": "mixed", "S048": "mixed", "S049": "mixed", "S050": "industrial", "S051": "school", "S052": "mixed", "S053": "mixed", "S054": "mixed", "S055": "residential", "S056": "mixed"};
 var ZONE_COEFF={
   school:      {label:"學區",   beer:1.05,water:1.12,liquor:1.18,food:1.0},
   industrial:  {label:"工業區", beer:1.22,water:1.18,liquor:1.05,food:1.05},
@@ -497,6 +498,25 @@ function onPredictStore(){
 function renderZoneBtns(sid){
   var cur=getZone(sid);
   document.getElementById("zone-badge").textContent=(ZONE_COEFF[cur]||ZONE_COEFF.mixed).label;
+  // 顯示 OSM 比例資料（如果有的話）
+  var zoneInfo=document.getElementById("zone-info");
+  if(zoneInfo){
+    var sz=_storeZones[sid];
+    if(sz&&sz.ratios&&sz.total_poi>0){
+      var r=sz.ratios;
+      zoneInfo.innerHTML=
+        "<div style=\"font-size:11px;color:var(--text3);margin-top:8px;display:flex;gap:10px;flex-wrap:wrap\">"
+        +(r.residential?"<span>🏠 住宅 "+r.residential+"%</span>":"")
+        +(r.commercial?"<span>🏪 商業 "+r.commercial+"%</span>":"")
+        +(r.industrial?"<span>🏭 工業 "+r.industrial+"%</span>":"")
+        +(r.school?"<span>🎓 學校 "+r.school+"%</span>":"")
+        +(r.office?"<span>🏢 辦公 "+r.office+"%</span>":"")
+        +"</div>";
+      zoneInfo.style.display="block";
+    } else {
+      zoneInfo.style.display="none";
+    }
+  }
   var zones=[{k:"school",l:"🎓 學區"},{k:"industrial",l:"🏭 工業區"},{k:"residential",l:"🏠 住宅區"},{k:"mixed",l:"🏪 混合"}];
   var c=document.getElementById("zone-btns");
   c.innerHTML="";
@@ -1404,7 +1424,7 @@ function exportPDF(){
 }
 
 
-try{init();loadXGBPredictions();}catch(e){console.error("init:",e);}
+try{init();loadXGBPredictions();loadStoreZones();}catch(e){console.error("init:",e);}
 </script>
 <script>
 var STORE_SKUS_DATA={};
