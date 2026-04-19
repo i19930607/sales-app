@@ -291,7 +291,10 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
     </div>
   </div>
   <div class="card">
-    <div class="card-title">歷史紀錄</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="card-title" style="margin:0">歷史紀錄</div>
+      <button class="btn btn-sm btn-ghost" onclick="exportAllRecords()">📥 匯出全部</button>
+    </div>
     <div id="rec-history"></div>
   </div>
 </div>
@@ -370,6 +373,58 @@ var _store={
 var customSKUs={};
 var visitRecords=[];
 var hiddenSKUs={};
+
+// ── GitHub 自動同步 ──────────────────────────────────────────
+var GITHUB_TOKEN = "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";
+var GITHUB_USER  = "i19930607";
+var GITHUB_REPO  = "sales-app";
+
+function syncRecordsToGitHub(){
+  if(visitRecords.length === 0) return;
+  
+  // 把所有抄貨紀錄轉成 CSV 格式
+  var lines = ["order_id,order_date,store_id,store_name_raw,sku_id,sku_name,qty,unit"];
+  visitRecords.forEach(function(r){
+    r.items.forEach(function(it){
+      lines.push([
+        "REC-"+r.store_id+"-"+r.date,
+        r.date, r.store_id, r.store_name,
+        it.id, it.name, it.ordered, it.unit
+      ].join(","));
+    });
+  });
+  var csvContent = lines.join("\n");
+  var b64 = btoa(unescape(encodeURIComponent(csvContent)));
+  
+  var apiUrl = "https://api.github.com/repos/"+GITHUB_USER+"/"+GITHUB_REPO+"/contents/抄貨紀錄_all.csv";
+  var headers = {
+    "Authorization": "token "+GITHUB_TOKEN,
+    "Content-Type": "application/json"
+  };
+  
+  // 先取得現有檔案的 SHA
+  fetch(apiUrl, {headers: headers})
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var sha = data.sha || "";
+      var body = {
+        message: "Update visit records "+new Date().toISOString().slice(0,10),
+        content: b64,
+        sha: sha
+      };
+      return fetch(apiUrl, {
+        method: "PUT",
+        headers: headers,
+        body: JSON.stringify(body)
+      });
+    })
+    .then(function(r){
+      if(r.ok) console.log("✓ 抄貨紀錄已同步到 GitHub");
+      else r.text().then(function(t){ console.error("✗ 同步失敗:", t); });
+    })
+    .catch(function(e){ console.error("✗ GitHub 同步錯誤:", e); });
+}
+
 var _storeZones={};
 var restoredSKUs={};
 
@@ -659,7 +714,9 @@ function renderSkuList(containerId,storeId,prefix){
     if(prefix==="stock"){
             html+="<div class=\"sku-row\">";
       html+="<div><div style=\"font-size:14px\">"+s.sku_name+"</div>";
-      var lastInfo=s.last_order?" · 上次 "+s.last_order:"";
+      var _lo_override=JSON.parse(localStorage.getItem("last_order_override")||"{}");
+      var _lo=(_lo_override[storeId]&&_lo_override[storeId][s.sku_id])||s.last_order||"";
+      var lastInfo=_lo?" · 上次 "+_lo:"";
       html+="<div style=\"font-size:11px;color:var(--text3)\">均量 "+s.recent_avg+" "+s.unit+" · 每 "+s.avg_gap+" 天"+lastInfo+"</div></div>";
       html+="<input class=\"sku-input\" type=\"number\" min=\"0\" placeholder=\"0\" id=\"si-"+s.sku_id+"\">";
       html+="<div style=\"font-size:12px;color:var(--text3);text-align:center\">"+s.unit+"</div>";
@@ -1269,7 +1326,18 @@ function saveRecord(){
   visitRecords.unshift({date:ds,store_id:recStoreId,store_name:store.name,items:items,note:note});
   saveVRecs();
   renderRecHistory();
+
+  // 同步更新 last_order 到 localStorage
+  var overrides = JSON.parse(localStorage.getItem("last_order_override")||"{}");
+  if(!overrides[recStoreId]) overrides[recStoreId] = {};
+  items.forEach(function(it){
+    overrides[recStoreId][it.id] = ds;
+  });
+  localStorage.setItem("last_order_override", JSON.stringify(overrides));
+
   clearRecForm();
+  // 自動同步到 GitHub
+  syncRecordsToGitHub();
   alert("已儲存 "+store.name+" "+ds+" 抄貨紀錄（"+items.length+" 項）");
 }
 
@@ -1314,6 +1382,33 @@ function exportRecord(){
   var a=document.createElement("a");
   a.href=url;a.download=rec.store_name+"_"+rec.date+".csv";
   document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+function exportAllRecords(){
+  // 匯出所有抄貨紀錄，格式跟 orders_clean.csv 一樣
+  if(visitRecords.length===0){alert("尚無抄貨紀錄");return;}
+  var lines=["order_id,order_date,store_id,store_name_raw,sku_id,sku_name,qty,unit"];
+  visitRecords.forEach(function(r){
+    r.items.forEach(function(it){
+      var row=[
+        "REC-"+r.store_id+"-"+r.date,
+        r.date,
+        r.store_id,
+        r.store_name,
+        it.id,
+        it.name,
+        it.ordered,
+        it.unit
+      ].join(",");
+      lines.push(row);
+    });
+  });
+  var blob=new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8;"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");
+  a.href=url;a.download="抄貨紀錄_all_"+new Date().toISOString().slice(0,10)+".csv";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  alert("已匯出 "+visitRecords.length+" 筆抄貨紀錄");
 }
 
 // ── event delegation（統一處理所有按鈕事件）─────────────────
