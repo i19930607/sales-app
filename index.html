@@ -360,12 +360,26 @@ var _store={
 var customSKUs={};
 var visitRecords=[];
 var hiddenSKUs={};
+var _storeZones={};
 var restoredSKUs={};
 
 
 // ── XGBoost 預測結果載入 ──────────────────────────────────
 var _xgbPredictions = null;
 var _xgbLoadedAt = null;
+
+function loadStoreZones(){
+  var baseUrl=window.location.href.replace(/index\.html.*$/,"");
+  fetch(baseUrl+"store_zones.json")
+    .then(function(r){if(!r.ok)throw new Error("no file");return r.json();})
+    .then(function(data){
+      _storeZones=data;
+      console.log("Store zones loaded:",Object.keys(data).length,"stores");
+    })
+    .catch(function(){
+      console.log("store_zones.json 尚未建立");
+    });
+}
 
 function loadXGBPredictions(){
   // 從 GitHub repo 的 predictions.json 讀取
