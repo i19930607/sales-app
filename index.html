@@ -556,6 +556,19 @@ function loadVisitRecordsFromGitHub(){
         saveVRecs();
         renderRecHistory();
         console.log("✓ 從 GitHub 載入抄貨紀錄：" + loaded.length + " 筆");
+
+        // 同步更新 last_order_override（供叫貨預測顯示最新日期）
+        var overrides = {};
+        loaded.forEach(function(r){
+          if(!overrides[r.store_id]) overrides[r.store_id] = {};
+          r.items.forEach(function(it){
+            var cur = overrides[r.store_id][it.id];
+            if(!cur || r.date > cur){
+              overrides[r.store_id][it.id] = r.date;
+            }
+          });
+        });
+        try{ localStorage.setItem("last_order_override", JSON.stringify(overrides)); }catch(e){}
       }
     })
     .catch(function(){
