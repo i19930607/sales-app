@@ -92,6 +92,7 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
 
 <!-- 叫貨預測 -->
 <div class="page active" id="page-predict">
+  <div id="holiday-banner" style="display:none;background:linear-gradient(135deg,#c0392b,#e74c3c);border-radius:var(--r2);padding:14px 16px;margin-bottom:12px;color:#fff;font-size:14px;line-height:1.5"></div>
   <div class="card">
     <div class="card-title">選擇門市</div>
     <select id="sel-predict" onchange="onPredictStore()"></select>
@@ -158,7 +159,10 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div class="card-title" style="margin:0">選擇今日門市</div>
-      <button class="btn btn-sm btn-ghost" onclick="clearRouteChecks()">清除</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="checkin-count" style="font-size:11px;color:var(--green)"></span>
+        <button class="btn btn-sm btn-ghost" onclick="clearRouteChecks()">清除</button>
+      </div>
     </div>
     <div id="store-list-route"></div>
   </div>
@@ -217,6 +221,7 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
 
 <!-- 新增品項 -->
 <div class="page" id="page-addsku">
+  <div id="holiday-banner" style="display:none;background:linear-gradient(135deg,#c0392b,#e74c3c);border-radius:var(--r2);padding:14px 16px;margin-bottom:12px;color:#fff;font-size:14px;line-height:1.5"></div>
   <div class="card">
     <div class="card-title">選擇門市</div>
     <select id="sel-addsku" onchange="onAddSKUStore()"></select>
@@ -426,12 +431,83 @@ function syncRecordsToGitHub(){
 }
 
 var _storeZones={};
+
+// ── 打卡功能 ──────────────────────────────────────────────────
+var _checkins = {}; // { "2026-04-20": ["S001","S003",...] }
+
+function getTodayKey(){
+  var d = new Date();
+  return d.getFullYear()+"-"+(String(d.getMonth()+1).padStart(2,"0"))+"-"+(String(d.getDate()).padStart(2,"0"));
+}
+
+function loadCheckins(){
+  try{ var c=_store.get("checkins"); if(c)_checkins=JSON.parse(c); }catch(e){}
+}
+
+function saveCheckins(){
+  try{ _store.set("checkins",JSON.stringify(_checkins)); }catch(e){}
+}
+
+function toggleCheckin(storeId){
+  var today = getTodayKey();
+  if(!_checkins[today]) _checkins[today] = [];
+  var idx = _checkins[today].indexOf(storeId);
+  if(idx >= 0){
+    _checkins[today].splice(idx, 1);
+  } else {
+    _checkins[today].push(storeId);
+  }
+  saveCheckins();
+  renderCheckinStatus();
+}
+
+function isCheckedIn(storeId){
+  var today = getTodayKey();
+  return _checkins[today] && _checkins[today].indexOf(storeId) >= 0;
+}
+
+function renderCheckinStatus(){
+  // 更新路線規劃頁面的打卡狀態
+  STORES.forEach(function(st){
+    var el = document.getElementById("ci-"+st.id);
+    if(!el) return;
+    if(isCheckedIn(st.id)){
+      el.textContent = "✓ 已到訪";
+      el.style.color = "var(--green)";
+      el.parentElement.style.opacity = "0.6";
+    } else {
+      el.textContent = "";
+      el.parentElement.style.opacity = "1";
+    }
+  });
+  // 更新統計
+  var today = getTodayKey();
+  var todayCheckins = (_checkins[today]||[]).length;
+  var el = document.getElementById("checkin-count");
+  if(el) el.textContent = "今日已到訪 "+todayCheckins+" 家";
+}
+
 var restoredSKUs={};
 
 
 // ── XGBoost 預測結果載入 ──────────────────────────────────
 var _xgbPredictions = null;
 var _xgbLoadedAt = null;
+var _isPreHoliday = false;
+var _holidayLength = 0;
+
+function renderHolidayBanner(){
+  var banner = document.getElementById("holiday-banner");
+  if(!banner) return;
+  if(_isPreHoliday && _holidayLength > 0){
+    banner.style.display = "block";
+    banner.innerHTML = "<span style=\"font-size:18px\">⚠️</span> "
+      + "本週連假 <strong>" + _holidayLength + " 天</strong>，建議叫貨量增加約 "
+      + Math.round(_holidayLength * 30) + "%，司機休假期間門市需備足存貨。";
+  } else {
+    banner.style.display = "none";
+  }
+}
 
 function loadStoreZones(){
   var baseUrl=window.location.href.replace(/index\.html.*$/,"");
@@ -458,7 +534,10 @@ function loadXGBPredictions(){
     .then(function(data){
       _xgbPredictions = data.predictions;
       _xgbLoadedAt = data.generated_at;
+      _isPreHoliday = data.is_pre_holiday || false;
+      _holidayLength = data.holiday_length || 0;
       console.log('XGBoost 預測載入，產生時間：' + _xgbLoadedAt);
+      renderHolidayBanner();
     })
     .catch(function(){
       console.log('predictions.json 尚未建立，使用規則預測');
@@ -490,6 +569,7 @@ function loadStorage(){
   try{var c=_store.get("hidden");if(c)hiddenSKUs=JSON.parse(c);}catch(e){}
   try{var d=_store.get("restored");if(d)restoredSKUs=JSON.parse(d);}catch(e){}
   loadZones();
+  loadCheckins();
 }
 function saveCSkus(){try{_store.set("cskus",JSON.stringify(customSKUs));}catch(e){}}
 function saveVRecs(){try{_store.set("vrecs",JSON.stringify(visitRecords));}catch(e){}}
@@ -835,10 +915,14 @@ function buildRouteList(){
     if(group.length===0)return;
     html+="<div style=\"font-size:11px;color:var(--text3);padding:6px 0 3px;font-weight:500\">"+(REGION_LABEL[r]||r)+"</div>";
     group.forEach(function(st){
-      html+="<div class=\"store-check\" onclick=\"toggleStore('"+st.id+"')\">";
+      html+="<div style=\"display:flex;align-items:center;justify-content:space-between;padding:4px 0\">";
+      html+="<div class=\"store-check\" style=\"flex:1;margin:0\" onclick=\"toggleStore('"+st.id+"')\">";
       html+="<div class=\"check-box\" id=\"cb-"+st.id+"\"></div>";
       html+="<div><div style=\"font-size:14px\">"+st.name+"</div>";
       html+="<div style=\"font-size:11px;color:var(--text3)\">"+st.addr+"</div></div>";
+      html+="</div>";
+      html+="<button class=\"btn btn-sm\" style=\"margin-left:8px;flex-shrink:0;min-width:64px\" onclick=\"toggleCheckin('"+st.id+"')\">打卡</button>";
+      html+="<span id=\"ci-"+st.id+"\" style=\"font-size:11px;margin-left:4px;min-width:50px\"></span>";
       html+="</div>";
     });
   });
@@ -1308,7 +1392,7 @@ function clearRecForm(){
 function saveRecord(){
   if(!recStoreId){alert("請選擇門市");return;}
   var store=STORES.filter(function(s){return s.id===recStoreId;})[0];
-  var skus=getSkus(recStoreId);
+  var skus=getActiveSkus(recStoreId);
   var items=[];
   skus.forEach(function(s){
     var oe=document.getElementById("ro-"+s.sku_id);
@@ -1582,7 +1666,7 @@ function exportPDF(){
 }
 
 
-try{init();loadXGBPredictions();loadStoreZones();}catch(e){console.error("init:",e);}
+try{init();loadXGBPredictions();loadStoreZones();renderCheckinStatus();}catch(e){console.error("init:",e);}
 </script>
 <script>
 var STORE_SKUS_DATA={};
