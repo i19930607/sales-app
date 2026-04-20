@@ -181,6 +181,17 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
 <!-- 新品調研 -->
 <div class="page" id="page-newprod">
   <div class="card">
+    <div class="card-title" style="margin-bottom:8px">API 設定</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px">輸入 Anthropic API Key 啟用 AI 分析（僅存在本機）</div>
+    <div style="display:flex;gap:8px">
+      <input type="password" id="np-apikey" placeholder="sk-ant-..." style="flex:1;font-size:13px"
+        onchange="localStorage.setItem('np_apikey',this.value)">
+      <button class="btn btn-sm btn-ghost" onclick="
+        document.getElementById('np-apikey').value=localStorage.getItem('np_apikey')||'';
+        alert('已載入');">載入</button>
+    </div>
+  </div>
+  <div class="card">
     <div class="card-title">新品資訊</div>
     <div style="display:grid;gap:10px">
       <div><label>產品名稱</label><input type="text" id="np-name" placeholder="例：蒙面騎士威士忌 700ml"></div>
@@ -507,6 +518,49 @@ function renderHolidayBanner(){
   } else {
     banner.style.display = "none";
   }
+}
+
+function loadVisitRecordsFromGitHub(){
+  var baseUrl = window.location.href.replace(/index\.html.*$/, "");
+  fetch(baseUrl + "抄貨紀錄_all.csv?" + Date.now())
+    .then(function(r){ if(!r.ok) throw new Error("no file"); return r.text(); })
+    .then(function(csv){
+      var lines = csv.trim().split("\n");
+      if(lines.length < 2) return;
+      // 解析 CSV：order_id,order_date,store_id,store_name_raw,sku_id,sku_name,qty,unit
+      var records = {};
+      for(var i=1; i<lines.length; i++){
+        var cols = lines[i].split(",");
+        if(cols.length < 8) continue;
+        var date     = cols[1].trim();
+        var storeId  = cols[2].trim();
+        var storeName= cols[3].trim();
+        var skuId    = cols[4].trim();
+        var skuName  = cols[5].trim();
+        var qty      = cols[6].trim();
+        var unit     = cols[7].trim();
+        var key      = date + "_" + storeId;
+        if(!records[key]){
+          records[key] = {date:date, store_id:storeId, store_name:storeName, items:[], note:""};
+        }
+        if(qty && qty !== "0"){
+          records[key].items.push({id:skuId, name:skuName, unit:unit, ordered:qty});
+        }
+      }
+      // 轉成陣列，依日期排序
+      var loaded = Object.values(records).sort(function(a,b){
+        return b.date.localeCompare(a.date);
+      });
+      if(loaded.length > 0){
+        visitRecords = loaded;
+        saveVRecs();
+        renderRecHistory();
+        console.log("✓ 從 GitHub 載入抄貨紀錄：" + loaded.length + " 筆");
+      }
+    })
+    .catch(function(){
+      console.log("尚無雲端抄貨紀錄，使用本機資料");
+    });
 }
 
 function loadStoreZones(){
@@ -1044,9 +1098,19 @@ function analyzeProduct(){
     +"請用繁體中文條列輸出以下四個區塊，每區塊 3-4 點，語氣像有說服力的業務跟店長說話：\n"
     +"1. 市場機會\n2. 目標門市建議\n3. 預估銷售潛力\n4. 建議話術\n\n每點不超過 50 字。";
 
+  var apiKey = localStorage.getItem("np_apikey") || document.getElementById("np-apikey").value;
+  if(!apiKey){
+    res.innerHTML="<div class=\"card\"><div style=\"color:var(--red);font-size:13px\">請先在上方輸入 Anthropic API Key</div></div>";
+    return;
+  }
   fetch("https://api.anthropic.com/v1/messages",{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
+    headers:{
+      "Content-Type":"application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access":"true"
+    },
     body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})
   }).then(function(r){return r.json();}).then(function(data){
     var text=data.content.map(function(c){return c.text||"";}).join("");
@@ -1666,7 +1730,19 @@ function exportPDF(){
 }
 
 
-try{init();loadXGBPredictions();loadStoreZones();renderCheckinStatus();}catch(e){console.error("init:",e);}
+try{
+  init();
+  loadXGBPredictions();
+  loadStoreZones();
+  loadVisitRecordsFromGitHub();
+  renderCheckinStatus();
+  // 自動填入已存的 API Key
+  var savedKey = localStorage.getItem("np_apikey");
+  if(savedKey){
+    var keyEl = document.getElementById("np-apikey");
+    if(keyEl) keyEl.value = savedKey;
+  }
+}catch(e){console.error("init:",e);}
 </script>
 <script>
 var STORE_SKUS_DATA={};
