@@ -1173,11 +1173,37 @@ function generateReport(){
   // 真實月度資料
   var storeMonthly=(typeof MONTHLY_DATA!=="undefined"&&MONTHLY_DATA[storeId])||{};
   var realItems=storeMonthly[month]||[];
-  var hasPast=realItems.length>0;
 
+  // 合併抄貨紀錄（當月）
+  var recMap={};
+  visitRecords.forEach(function(r){
+    if(r.store_id!==storeId) return;
+    if(!r.date||r.date.slice(0,7)!==month) return;
+    r.items.forEach(function(it){
+      if(!recMap[it.name]) recMap[it.name]={name:it.name,unit:it.unit,qty:0};
+      recMap[it.name].qty += parseFloat(it.ordered)||0;
+    });
+  });
+  var recItems=Object.values(recMap);
+
+  // 合併靜態月度資料和抄貨紀錄
+  var mergedMap={};
+  realItems.forEach(function(d){
+    mergedMap[d[0]]={name:d[0],unit:d[1],actual:d[2],predicted:d[3]};
+  });
+  recItems.forEach(function(it){
+    if(mergedMap[it.name]){
+      // 抄貨紀錄加進實際量
+      mergedMap[it.name].actual=(mergedMap[it.name].actual||0)+it.qty;
+    } else {
+      mergedMap[it.name]={name:it.name,unit:it.unit,actual:it.qty,predicted:null};
+    }
+  });
+
+  var hasPast=Object.keys(mergedMap).length>0;
   var monthData;
   if(hasPast){
-    monthData=realItems.map(function(d){return {name:d[0],unit:d[1],actual:d[2],predicted:d[3]};});
+    monthData=Object.values(mergedMap);
   } else {
     var skus=getSkus(storeId);
     monthData=skus.map(function(s){
