@@ -1225,7 +1225,7 @@ function generateReport(){
   html+="<div class=\"stat-grid\">";
   html+="<div class=\"stat-box\"><div class=\"stat-val\">"+Math.round(totalQty)+"</div><div class=\"stat-lbl\">"+(hasPast?"本月總出貨":"次月預測量")+"</div></div>";
   html+="<div class=\"stat-box\"><div class=\"stat-val\">"+monthData.length+"</div><div class=\"stat-lbl\">品項數</div></div>";
-  html+="<div class=\"stat-box\"><div class=\"stat-val\">"+Math.round(totalQty*350/10000)+"萬</div><div class=\"stat-lbl\">估計金額</div></div>";
+  html+="<div class=\\\"stat-box\\\"><div class=\\\"stat-val\\\" style=\\\"font-size:14px;line-height:1.3\\\">"+(topSku?topSku.name.replace(/\\d+cc|\\d+ml|\\d+ML/gi,"").trim().substring(0,6):"–")+"</div><div class=\\\"stat-lbl\\\">最熱品項</div></div>";
   html+="</div>";
 
   // 本月分析（只有真實資料才顯示）
