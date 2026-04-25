@@ -75,7 +75,6 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
 .rec-grid{display:grid;grid-template-columns:1fr 76px 76px;gap:7px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
 .rec-grid:last-child{border-bottom:none}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -1583,27 +1582,13 @@ function exportStorePDF(){
   var month   = document.getElementById("report-month").value;
   if(!storeId || !month){ alert("請先選擇門市和月份"); return; }
   var store = STORES.filter(function(s){ return s.id===storeId; })[0];
-  if(!store){ return; }
+  if(!store) return;
 
-  var doc = new window.jspdf.jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
-  var W = 210, margin = 16, y = 20;
-
-  // 設定中文字體（用 Base64 內建字型）
-  doc.setFont("helvetica");
-
-  // 標題
-  doc.setFillColor(88, 86, 214);
-  doc.rect(0, 0, W, 30, "F");
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(16);
-  doc.text(store.name + "  " + month + " 月結報告", margin, 18);
-  doc.setFontSize(9);
-  doc.text("產生時間：" + new Date().toLocaleDateString("zh-TW"), margin, 26);
-  y = 38;
+  var yr = month.slice(0,4), mon = parseInt(month.slice(5,7));
+  var nextMon = mon===12 ? (parseInt(yr)+1)+"年01月" : yr+"年"+(String(mon+1).padStart(2,"0"))+"月";
 
   // 讀取月度資料
   var storeMonthly = (typeof MONTHLY_DATA!=="undefined" && MONTHLY_DATA[storeId]) || {};
-  var yr = month.slice(0,4), mon = parseInt(month.slice(5,7));
   var realItems = storeMonthly[month] || [];
 
   // 合併抄貨紀錄
@@ -1617,253 +1602,197 @@ function exportStorePDF(){
   });
   realItems.forEach(function(d){
     if(!recMap[d[0]]) recMap[d[0]]={name:d[0],unit:d[1],actual:d[2],predicted:d[3]};
-    else { recMap[d[0]].predicted=d[3]; }
+    else { if(!recMap[d[0]].predicted) recMap[d[0]].predicted=d[3]; }
   });
+
   var data = Object.values(recMap).filter(function(d){ return d.actual>0; })
     .sort(function(a,b){ return b.actual-a.actual; });
 
-  // 過濾超過180天沒下單的品項
+  // 過濾超過180天
   var skuMap = {};
   var skus = getAllSkus ? getAllSkus(storeId) : [];
-  skus.forEach(function(s){ skuMap[s.sku_name] = s; });
+  skus.forEach(function(s){ skuMap[s.sku_name]=s; });
   data = data.filter(function(d){
     var s = skuMap[d.name];
-    return !s || (s.days_since !== undefined ? s.days_since <= 180 : true);
+    return !s || (s.days_since!==undefined ? s.days_since<=180 : true);
   });
 
-  // 總覽統計
   var total = data.reduce(function(a,b){ return a+b.actual; },0);
-  doc.setTextColor(30,30,30);
-  doc.setFontSize(11);
-  doc.setFont("helvetica","bold");
-  doc.text("本月總叫貨：" + Math.round(total) + " 箱／瓶／包", margin, y);
-  doc.text("品項數：" + data.length, 130, y);
-  y += 8;
 
-  // 分隔線
-  doc.setDrawColor(200,200,200);
-  doc.line(margin, y, W-margin, y);
-  y += 6;
-
-  // 本月叫貨明細表頭
-  doc.setFontSize(10);
-  doc.setFont("helvetica","bold");
-  doc.setFillColor(240,240,250);
-  doc.rect(margin, y-4, W-margin*2, 8, "F");
-  doc.text("品項", margin+2, y+1);
-  doc.text("本月", 110, y+1);
-  doc.text("去年同月", 135, y+1);
-  doc.text("增減", 165, y+1);
-  doc.text("單位", 185, y+1);
-  y += 8;
-
-  doc.setFont("helvetica","normal");
-  doc.setFontSize(9);
-  data.forEach(function(d, i){
-    if(y > 265){ doc.addPage(); y = 20; }
-    if(i%2===0){ doc.setFillColor(248,248,252); doc.rect(margin,y-3,W-margin*2,7,"F"); }
-    var pct = d.predicted>0 ? Math.round(((d.actual-d.predicted)/d.predicted)*100) : null;
-    var pctStr = pct!==null ? (pct>0?"+":"")+pct+"%" : "—";
-    var pctColor = pct!==null ? (pct>5?[39,174,96]:pct<-5?[192,57,43]:[100,100,100]) : [150,150,150];
-    doc.setTextColor(30,30,30);
-    doc.text(d.name.substring(0,18), margin+2, y+1);
-    doc.text(String(Math.round(d.actual)), 118, y+1, {align:"right"});
-    doc.text(d.predicted!=null?String(Math.round(d.predicted)):"—", 150, y+1, {align:"right"});
-    doc.setTextColor(pctColor[0],pctColor[1],pctColor[2]);
-    doc.text(pctStr, 172, y+1, {align:"right"});
-    doc.setTextColor(100,100,100);
-    doc.text(d.unit||"", 187, y+1);
-    y += 7;
-  });
-
-  // 次月建議
-  y += 4;
-  if(y > 240){ doc.addPage(); y = 20; }
-  doc.setDrawColor(200,200,200);
-  doc.line(margin, y, W-margin, y);
-  y += 6;
-
-  var nextMon = mon===12 ? parseInt(yr)+1+"年01月" : yr+"年"+(String(mon+1).padStart(2,"0"))+"月";
-  doc.setFont("helvetica","bold");
-  doc.setFontSize(10);
-  doc.setTextColor(30,30,30);
-  doc.text(nextMon + " 建議叫貨", margin, y);
-  y += 6;
-
-  doc.setFillColor(240,240,250);
-  doc.rect(margin, y-4, W-margin*2, 8, "F");
-  doc.setFontSize(9);
-  doc.text("品項", margin+2, y+1);
-  doc.text("建議量", 155, y+1);
-  doc.text("單位", 185, y+1);
-  y += 8;
-
+  // XGBoost
   var xgbStore = _xgbPredictions && _xgbPredictions[storeId];
   var xgbMap = {};
   if(xgbStore) xgbStore.forEach(function(x){ xgbMap[x.sku_name]=x.xgb_pred; });
 
-  doc.setFont("helvetica","normal");
-  data.forEach(function(d, i){
-    if(y > 270){ doc.addPage(); y = 20; }
-    if(i%2===0){ doc.setFillColor(248,248,252); doc.rect(margin,y-3,W-margin*2,7,"F"); }
+  // 產生明細 HTML
+  var rows1 = data.map(function(d){
+    var pct = d.predicted>0 ? Math.round(((d.actual-d.predicted)/d.predicted)*100) : null;
+    var pctStr = pct!==null ? (pct>0?"+":"")+pct+"%" : "—";
+    var pctCol = pct!==null ? (pct>5?"#27ae60":pct<-5?"#c0392b":"#666") : "#999";
+    return "<tr><td>"+d.name+"</td><td>"+Math.round(d.actual)+"</td>"
+      +"<td>"+(d.predicted!=null?Math.round(d.predicted):"—")+"</td>"
+      +"<td style='color:"+pctCol+";font-weight:600'>"+pctStr+"</td>"
+      +"<td>"+d.unit+"</td></tr>";
+  }).join("");
+
+  var rows2 = data.map(function(d){
     var ruleQty = Math.max(1, Math.round(d.actual*0.6+(d.predicted||d.actual)*0.4));
     var xgbQty  = xgbMap[d.name];
     var fpred   = xgbQty ? Math.round(ruleQty*0.4+xgbQty*0.6) : ruleQty;
-    doc.setTextColor(30,30,30);
-    doc.text(d.name.substring(0,18), margin+2, y+1);
-    doc.setTextColor(xgbQty?[39,174,96]:[30,30,30]);
-    doc.text(String(fpred), 162, y+1, {align:"right"});
-    doc.setTextColor(100,100,100);
-    doc.text(d.unit||"", 187, y+1);
-    y += 7;
-  });
+    var aiTag   = xgbQty ? "<span style='color:#27ae60;font-size:10px'> AI</span>" : "";
+    return "<tr><td>"+d.name+"</td><td style='font-weight:600'>"+fpred+aiTag+"</td>"
+      +"<td>"+d.unit+"</td></tr>";
+  }).join("");
 
-  // 頁腳
-  doc.setFontSize(8);
-  doc.setTextColor(150,150,150);
-  doc.text("業務助理系統自動產生　綠色數字表示 AI 模型預測", margin, 290);
+  var now = new Date().toLocaleDateString("zh-TW");
+  var printHTML = "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
+    +"<title>"+store.name+" "+month+" 月結報告</title>"
+    +"<style>"
+    +"*{margin:0;padding:0;box-sizing:border-box;font-family:'Microsoft JhengHei','Noto Sans TC',sans-serif}"
+    +"body{padding:20px;font-size:13px;color:#222}"
+    +".header{background:linear-gradient(135deg,#5856d6,#9b6dff);color:#fff;padding:18px 24px;border-radius:8px;margin-bottom:16px}"
+    +".header h1{font-size:18px;font-weight:700;margin-bottom:4px}"
+    +".header p{font-size:11px;opacity:.8}"
+    +".stats{display:flex;gap:12px;margin-bottom:16px}"
+    +".stat{flex:1;background:#f5f5ff;border-radius:6px;padding:12px;text-align:center}"
+    +".stat-val{font-size:22px;font-weight:700;color:#5856d6}"
+    +".stat-lbl{font-size:10px;color:#888;margin-top:2px}"
+    +"h2{font-size:13px;font-weight:700;margin:16px 0 8px;padding-bottom:4px;border-bottom:2px solid #5856d6}"
+    +"table{width:100%;border-collapse:collapse;font-size:12px}"
+    +"th{background:#f0f0fa;padding:7px 10px;text-align:left;font-weight:600;font-size:11px}"
+    +"td{padding:6px 10px;border-bottom:1px solid #eee}"
+    +"tr:nth-child(even){background:#fafafa}"
+    +".footer{margin-top:20px;font-size:10px;color:#aaa;text-align:right}"
+    +"@media print{body{padding:10px}}"
+    +"</style></head><body>"
+    +"<div class='header'><h1>"+store.name+"　"+yr+"年"+String(mon).padStart(2,"0")+"月　月結報告</h1>"
+    +"<p>本月總叫貨 "+Math.round(total)+" 箱／瓶　共 "+data.length+" 品項　產生時間："+now+"</p></div>"
+    +"<div class='stats'>"
+    +"<div class='stat'><div class='stat-val'>"+Math.round(total)+"</div><div class='stat-lbl'>本月總叫貨</div></div>"
+    +"<div class='stat'><div class='stat-val'>"+data.length+"</div><div class='stat-lbl'>品項數</div></div>"
+    +"<div class='stat'><div class='stat-val'>"+(data[0]?data[0].name.replace(/\d+cc|\d+ml/gi,"").trim().substring(0,6):"—")+"</div><div class='stat-lbl'>最熱品項</div></div>"
+    +"</div>"
+    +"<h2>本月叫貨明細（對比去年同月）</h2>"
+    +"<table><tr><th>品項</th><th>本月</th><th>去年同月</th><th>增減</th><th>單位</th></tr>"+rows1+"</table>"
+    +"<h2>"+nextMon+" 叫貨建議</h2>"
+    +"<table><tr><th>品項</th><th>建議量</th><th>單位</th></tr>"+rows2+"</table>"
+    +"<div class='footer'>業務助理系統　綠色 AI 標示表示模型預測　列印時請選擇「另存為PDF」</div>"
+    +"</body></html>";
 
-  doc.save(store.name + "_" + month + "_月結報告.pdf");
+  var w = window.open("","_blank");
+  w.document.write(printHTML);
+  w.document.close();
+  setTimeout(function(){ w.print(); }, 500);
 }
 
 function exportManagerPDF(){
   var month = document.getElementById("report-month").value;
   if(!month){ alert("請先選擇月份"); return; }
+  var yr = month.slice(0,4), mon = parseInt(month.slice(5,7));
 
-  var doc = new window.jspdf.jsPDF({ orientation:"landscape", unit:"mm", format:"a4" });
-  var W = 297, H = 210, margin = 14, y = 20;
-
-  // 標題
-  doc.setFillColor(88,86,214);
-  doc.rect(0,0,W,28,"F");
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(16);
-  doc.text("業務月結總覽　" + month, margin, 16);
-  doc.setFontSize(9);
-  doc.text("產生時間：" + new Date().toLocaleDateString("zh-TW") + "　共 " + STORES.length + " 家門市", margin, 24);
-  y = 36;
-
-  // 各區統計
   var regions = [
-    { key:"taipei",     label:"台北" },
-    { key:"new_taipei", label:"新北" },
-    { key:"taoyuan",    label:"桃園" },
-    { key:"hsinchu",    label:"新竹" },
-    { key:"miaoli",     label:"苗栗" },
+    {key:"taipei",     label:"台北"},
+    {key:"new_taipei", label:"新北"},
+    {key:"taoyuan",    label:"桃園"},
+    {key:"hsinchu",    label:"新竹"},
+    {key:"miaoli",     label:"苗栗"},
   ];
 
-  // 計算各區本月總量
-  var regionTotals = {};
-  var storeTotals  = {};
+  // 計算各門市本月總量
+  var storeTotals = {}, regionTotals = {}, regionLY = {};
   STORES.forEach(function(st){
     var storeMonthly = (typeof MONTHLY_DATA!=="undefined" && MONTHLY_DATA[st.id]) || {};
     var items = storeMonthly[month] || [];
-    var total = items.reduce(function(a,b){ return a+(b[2]||0); },0);
-    // 加上抄貨紀錄
+    var actual = items.reduce(function(a,b){ return a+(b[2]||0); },0);
+    var ly     = items.reduce(function(a,b){ return a+(b[3]||0); },0);
     visitRecords.forEach(function(r){
       if(r.store_id!==st.id || !r.date || r.date.slice(0,7)!==month) return;
-      r.items.forEach(function(it){ total += parseFloat(it.ordered)||0; });
+      r.items.forEach(function(it){ actual += parseFloat(it.ordered)||0; });
     });
-    storeTotals[st.id] = Math.round(total);
-    var reg = st.region || "other";
-    regionTotals[reg] = (regionTotals[reg]||0) + total;
+    storeTotals[st.id] = {actual:Math.round(actual), ly:Math.round(ly)};
+    var reg = st.region||"other";
+    regionTotals[reg] = (regionTotals[reg]||0)+actual;
+    regionLY[reg]     = (regionLY[reg]||0)+ly;
   });
 
-  // 區域總覽卡片
-  doc.setFont("helvetica","bold");
-  doc.setFontSize(10);
-  doc.setTextColor(30,30,30);
-  doc.text("各區域總叫貨量", margin, y);
-  y += 6;
-
-  var cardW = (W - margin*2 - 8*4) / 5;
-  regions.forEach(function(r, i){
-    var x = margin + i*(cardW+8);
+  // 區域卡片
+  var statCards = regions.map(function(r){
     var val = Math.round(regionTotals[r.key]||0);
-    doc.setFillColor(245,245,255);
-    doc.roundedRect(x, y, cardW, 16, 2, 2, "F");
-    doc.setFontSize(14);
-    doc.setTextColor(88,86,214);
-    doc.setFont("helvetica","bold");
-    doc.text(String(val), x+cardW/2, y+9, {align:"center"});
-    doc.setFontSize(8);
-    doc.setTextColor(100,100,100);
-    doc.setFont("helvetica","normal");
-    doc.text(r.label, x+cardW/2, y+14, {align:"center"});
-  });
-  y += 22;
+    var ly  = Math.round(regionLY[r.key]||0);
+    var pct = ly>0 ? Math.round(((val-ly)/ly)*100) : null;
+    var pctStr = pct!==null ? (pct>0?"+":"")+pct+"%" : "";
+    var pctCol = pct!==null ? (pct>5?"#27ae60":pct<-5?"#c0392b":"#666") : "#666";
+    return "<div class='stat'><div class='stat-val'>"+val+"</div>"
+      +"<div class='stat-pct' style='color:"+pctCol+"'>"+pctStr+"</div>"
+      +"<div class='stat-lbl'>"+r.label+"</div></div>";
+  }).join("");
 
-  // 門市明細表
-  doc.setDrawColor(200,200,200);
-  doc.line(margin, y, W-margin, y);
-  y += 5;
+  // 各區門市明細
+  var regionSections = regions.map(function(r){
+    var regStores = STORES.filter(function(s){ return s.region===r.key; });
+    if(!regStores.length) return "";
+    var regTotal = Math.round(regionTotals[r.key]||0);
+    var regLY    = Math.round(regionLY[r.key]||0);
+    var regPct   = regLY>0 ? Math.round(((regTotal-regLY)/regLY)*100) : null;
+    var regPctStr= regPct!==null ? (regPct>0?"+":"")+regPct+"%" : "—";
+    var regPctCol= regPct!==null ? (regPct>5?"#27ae60":regPct<-5?"#c0392b":"#666") : "#666";
 
-  doc.setFont("helvetica","bold");
-  doc.setFontSize(9);
-  doc.setFillColor(235,235,248);
-  doc.rect(margin, y-3, W-margin*2, 7, "F");
-  doc.setTextColor(30,30,30);
-  doc.text("門市", margin+2, y+1);
-  doc.text("本月叫貨", 80, y+1);
-  doc.text("去年同月", 115, y+1);
-  doc.text("增減%", 148, y+1);
-  doc.text("TOP品項", 170, y+1);
-  y += 8;
-
-  doc.setFont("helvetica","normal");
-  doc.setFontSize(8);
-
-  // 依區域分組顯示
-  var regionOrder = ["taipei","new_taipei","taoyuan","hsinchu","miaoli"];
-  regionOrder.forEach(function(regKey){
-    var regStores = STORES.filter(function(s){ return s.region===regKey; });
-    if(!regStores.length) return;
-
-    // 區域小標題
-    if(y > 185){ doc.addPage(); y = 20; }
-    var regLabel = regions.filter(function(r){ return r.key===regKey; })[0];
-    doc.setFillColor(220,220,240);
-    doc.rect(margin, y-3, W-margin*2, 6, "F");
-    doc.setFont("helvetica","bold");
-    doc.setFontSize(8);
-    doc.setTextColor(88,86,214);
-    doc.text((regLabel?regLabel.label:"其他") + "　共 " + regStores.length + " 家　本月 " + Math.round(regionTotals[regKey]||0) + " 箱", margin+2, y+1);
-    y += 6;
-    doc.setFont("helvetica","normal");
-    doc.setTextColor(30,30,30);
-
-    regStores.forEach(function(st, i){
-      if(y > 195){ doc.addPage(); y = 20; }
+    var rows = regStores.map(function(st, i){
+      var t = storeTotals[st.id]||{actual:0,ly:0};
+      var pct = t.ly>0 ? Math.round(((t.actual-t.ly)/t.ly)*100) : null;
+      var pctStr = pct!==null ? (pct>0?"+":"")+pct+"%" : "—";
+      var pctCol = pct!==null ? (pct>5?"#27ae60":pct<-5?"#c0392b":"#666") : "#999";
       var storeMonthly = (typeof MONTHLY_DATA!=="undefined" && MONTHLY_DATA[st.id]) || {};
       var items = storeMonthly[month] || [];
-      var lyTotal = items.reduce(function(a,b){ return a+(b[3]||0); },0);
-      var actual  = storeTotals[st.id]||0;
-      var pct     = lyTotal>0 ? Math.round(((actual-lyTotal)/lyTotal)*100) : null;
-      var pctStr  = pct!==null ? (pct>0?"+":"")+pct+"%" : "—";
       var topItem = items.slice().sort(function(a,b){ return (b[2]||0)-(a[2]||0); })[0];
       var topName = topItem ? topItem[0].replace(/\d+cc|\d+ml|\d+ML/gi,"").trim().substring(0,8) : "—";
+      var bg = i%2===0 ? "" : "background:#fafafa";
+      return "<tr style='"+bg+"'><td>"+st.name+"</td><td>"+t.actual+"</td><td>"+t.ly+"</td>"
+        +"<td style='color:"+pctCol+";font-weight:600'>"+pctStr+"</td><td>"+topName+"</td></tr>";
+    }).join("");
 
-      if(i%2===0){ doc.setFillColor(250,250,255); doc.rect(margin,y-3,W-margin*2,6,"F"); }
-      doc.setTextColor(30,30,30);
-      doc.text(st.name, margin+2, y+1);
-      doc.text(String(actual), 95, y+1, {align:"right"});
-      doc.text(lyTotal>0?String(Math.round(lyTotal)):"—", 130, y+1, {align:"right"});
-      var pctColor = pct!==null ? (pct>5?[39,174,96]:pct<-5?[192,57,43]:[100,100,100]) : [150,150,150];
-      doc.setTextColor(pctColor[0],pctColor[1],pctColor[2]);
-      doc.text(pctStr, 162, y+1, {align:"right"});
-      doc.setTextColor(100,100,100);
-      doc.text(topName, 170, y+1);
-      y += 6;
-    });
-    y += 2;
-  });
+    return "<div class='region-header'>"
+      +"<span>"+r.label+"地區　"+regStores.length+" 家</span>"
+      +"<span>本月 <b>"+regTotal+"</b>　去年 "+regLY+"　<span style='color:"+regPctCol+"'>"+regPctStr+"</span></span>"
+      +"</div>"
+      +"<table><tr><th>門市</th><th>本月</th><th>去年同月</th><th>增減</th><th>最熱品項</th></tr>"+rows+"</table>";
+  }).join("");
 
-  // 頁腳
-  doc.setFontSize(7);
-  doc.setTextColor(150,150,150);
-  doc.text("業務助理系統　" + new Date().toLocaleDateString("zh-TW"), margin, H-6);
+  var now = new Date().toLocaleDateString("zh-TW");
+  var grandTotal = Math.round(Object.values(storeTotals).reduce(function(a,b){ return a+b.actual; },0));
 
-  doc.save("主管總覽_" + month + ".pdf");
+  var printHTML = "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
+    +"<title>主管總覽 "+month+"</title>"
+    +"<style>"
+    +"*{margin:0;padding:0;box-sizing:border-box;font-family:'Microsoft JhengHei','Noto Sans TC',sans-serif}"
+    +"body{padding:16px;font-size:12px;color:#222}"
+    +".header{background:linear-gradient(135deg,#5856d6,#9b6dff);color:#fff;padding:16px 20px;border-radius:8px;margin-bottom:14px}"
+    +".header h1{font-size:17px;font-weight:700;margin-bottom:3px}"
+    +".header p{font-size:10px;opacity:.8}"
+    +".stats{display:flex;gap:10px;margin-bottom:14px}"
+    +".stat{flex:1;background:#f5f5ff;border-radius:6px;padding:10px;text-align:center}"
+    +".stat-val{font-size:20px;font-weight:700;color:#5856d6}"
+    +".stat-pct{font-size:11px;font-weight:600;margin:2px 0}"
+    +".stat-lbl{font-size:10px;color:#888}"
+    +".region-header{display:flex;justify-content:space-between;align-items:center;"
+    +"background:#ededfa;padding:7px 10px;border-radius:4px;margin:14px 0 6px;font-weight:600;font-size:12px}"
+    +"table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px}"
+    +"th{background:#f0f0fa;padding:6px 8px;text-align:left;font-weight:600;font-size:10px}"
+    +"td{padding:5px 8px;border-bottom:1px solid #eee}"
+    +".footer{margin-top:14px;font-size:9px;color:#aaa;text-align:right}"
+    +"@media print{body{padding:8px}}"
+    +"</style></head><body>"
+    +"<div class='header'><h1>業務月結總覽　"+yr+"年"+String(mon).padStart(2,"0")+"月</h1>"
+    +"<p>共 "+STORES.length+" 家門市　本月總叫貨 "+grandTotal+" 箱／瓶　產生時間："+now+"</p></div>"
+    +"<div class='stats'>"+statCards+"</div>"
+    +regionSections
+    +"<div class='footer'>業務助理系統自動產生　列印時請選擇「另存為PDF」</div>"
+    +"</body></html>";
+
+  var w = window.open("","_blank");
+  w.document.write(printHTML);
+  w.document.close();
+  setTimeout(function(){ w.print(); }, 500);
 }
 
 function exportAllRecords(){
