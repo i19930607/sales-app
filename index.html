@@ -1713,12 +1713,6 @@ function exportManagerPDF(){
     regionAmt[reg] = (regionAmt[reg]||0)+amount;
     regionLYAmt[reg] = (regionLYAmt[reg]||0)+lyAmount;
   });
-    });
-    storeTotals[st.id] = {actual:Math.round(actual), ly:Math.round(ly)};
-    var reg = st.region||"other";
-    regionTotals[reg] = (regionTotals[reg]||0)+actual;
-    regionLY[reg]     = (regionLY[reg]||0)+ly;
-  });
 
   // 區域卡片
   var statCards = regions.map(function(r){
@@ -1743,14 +1737,10 @@ function exportManagerPDF(){
     var regPctCol= regPct!==null ? (regPct>5?"#27ae60":regPct<-5?"#c0392b":"#666") : "#666";
 
     var rows = regStores.map(function(st, i){
-      var t = storeTotals[st.id]||{actual:0,ly:0};
+      var t = storeTotals[st.id]||{orders:0,amount:0,lyOrders:0,lyAmount:0};
       var pct = t.lyAmount>0 ? Math.round(((t.amount-t.lyAmount)/t.lyAmount)*100) : null;
       var pctStr = pct!==null ? (pct>0?"+":"")+pct+"%" : "—";
       var pctCol = pct!==null ? (pct>5?"#27ae60":pct<-5?"#c0392b":"#666") : "#999";
-      var storeMonthly = (typeof MONTHLY_DATA!=="undefined" && MONTHLY_DATA[st.id]) || {};
-      var items = storeMonthly[month] || [];
-      var topItem = items.slice().sort(function(a,b){ return (b[2]||0)-(a[2]||0); })[0];
-      var topName = topItem ? topItem[0].replace(/\d+cc|\d+ml|\d+ML/gi,"").trim().substring(0,8) : "—";
       var bg = i%2===0 ? "" : "background:#fafafa";
       var amtK = t.amount>0 ? Math.round(t.amount/1000)+"k" : "—";
       var lyAmtK = t.lyAmount>0 ? Math.round(t.lyAmount/1000)+"k" : "—";
