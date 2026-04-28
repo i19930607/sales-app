@@ -313,7 +313,10 @@ label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div class="card-title" style="margin:0">歷史紀錄</div>
-      <button class="btn btn-sm btn-ghost" onclick="exportAllRecords()">📥 匯出全部</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm btn-ghost" onclick="manualSync()" id="sync-btn">☁️ 同步</button>
+        <button class="btn btn-sm btn-ghost" onclick="exportAllRecords()">📥 匯出全部</button>
+      </div>
     </div>
     <div id="rec-history"></div>
   </div>
@@ -635,15 +638,223 @@ function saveZones(){try{_store.set("zones",JSON.stringify(userZones));}catch(e)
 function getZone(sid){return userZones[sid]||DEFAULT_ZONES[sid]||"mixed";}
 
 function loadStorage(){
-  try{var a=_store.get("cskus");if(a)customSKUs=JSON.parse(a);}catch(e){}
-  try{var b=_store.get("vrecs");if(b)visitRecords=JSON.parse(b);}catch(e){}
-  try{var c=_store.get("hidden");if(c)hiddenSKUs=JSON.parse(c);}catch(e){}
-  try{var d=_store.get("restored");if(d)restoredSKUs=JSON.parse(d);}catch(e){}
+  try{var a=_store.get("cskus");if(a)customSKUs=JSON.parse(a);}catch(e){console.error("載入自訂品項失敗:",e);}
+  try{
+    var b=_store.get("vrecs");
+    if(b){
+      visitRecords=JSON.parse(b);
+      console.log("✓ 已載入 " + visitRecords.length + " 筆抄貨紀錄");
+    } else {
+      console.log("ℹ️ 沒有歷史抄貨紀錄");
+    }
+  }catch(e){
+    console.error("載入抄貨紀錄失敗:",e);
+    alert("⚠️ 載入歷史紀錄時發生錯誤,資料可能遺失!");
+  }
+  try{var c=_store.get("hidden");if(c)hiddenSKUs=JSON.parse(c);}catch(e){console.error("載入隱藏品項失敗:",e);}
+  try{var d=_store.get("restored");if(d)restoredSKUs=JSON.parse(d);}catch(e){console.error("載入恢復品項失敗:",e);}
+  
+  // 從雲端載入最新資料
+  GIST_ID = localStorage.getItem("gist_id");
+  if(GIST_ID){
+    loadFromGist();
+  }
+  
   loadZones();
   loadCheckins();
 }
 function saveCSkus(){try{_store.set("cskus",JSON.stringify(customSKUs));}catch(e){}}
-function saveVRecs(){try{_store.set("vrecs",JSON.stringify(visitRecords));}catch(e){}}
+function saveVRecs(){
+  try{
+    var data = JSON.stringify(visitRecords);
+    localStorage.setItem("vrecs", data);
+    // 立即驗證是否儲存成功
+    var verify = localStorage.getItem("vrecs");
+    if(!verify || verify !== data){
+      console.error("儲存驗證失敗!");
+      alert("⚠️ 資料可能未成功儲存,請截圖保存!");
+    } else {
+      console.log("✓ 已儲存 " + visitRecords.length + " 筆抄貨紀錄");
+      // 同步到 GitHub Gist
+      syncToGist();
+    }
+  }catch(e){
+    console.error("儲存失敗:", e);
+    alert("❌ 儲存失敗: " + e.message + "\n請匯出CSV備份!");
+  }
+}
+
+// GitHub Gist 同步功能
+var GIST_ID = localStorage.getItem("gist_id") || null;
+var GITHUB_TOKEN = "ghp_bJRyGfC0FdvuuwqXbGkBdz50HSlWDw0bsaaz"; // 你的 token
+var syncInProgress = false;
+
+function syncToGist(){
+  if(syncInProgress) return;
+  if(!navigator.onLine) {
+    console.log("📴 離線模式,稍後同步");
+    return;
+  }
+  
+  syncInProgress = true;
+  var data = {
+    visitRecords: visitRecords,
+    customSKUs: customSKUs,
+    hiddenSKUs: hiddenSKUs,
+    restoredSKUs: restoredSKUs,
+    lastSync: new Date().toISOString()
+  };
+  
+  var content = JSON.stringify(data, null, 2);
+  
+  if(GIST_ID){
+    // 更新現有 Gist
+    updateGist(content);
+  } else {
+    // 建立新 Gist
+    createGist(content);
+  }
+}
+
+function createGist(content){
+  fetch("https://api.github.com/gists", {
+    method: "POST",
+    headers: {
+      "Authorization": "token " + GITHUB_TOKEN,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      description: "小北銷售助理 - 抄貨紀錄備份",
+      public: false,
+      files: {
+        "sales-records.json": {
+          content: content
+        }
+      }
+    })
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(data){
+    if(data.id){
+      GIST_ID = data.id;
+      localStorage.setItem("gist_id", GIST_ID);
+      console.log("☁️ 已建立雲端備份: " + GIST_ID);
+      syncInProgress = false;
+    } else {
+      console.error("建立 Gist 失敗:", data);
+      syncInProgress = false;
+    }
+  })
+  .catch(function(err){
+    console.error("同步失敗:", err);
+    syncInProgress = false;
+  });
+}
+
+function updateGist(content){
+  fetch("https://api.github.com/gists/" + GIST_ID, {
+    method: "PATCH",
+    headers: {
+      "Authorization": "token " + GITHUB_TOKEN,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      files: {
+        "sales-records.json": {
+          content: content
+        }
+      }
+    })
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(data){
+    if(data.id){
+      console.log("☁️ 雲端備份已更新 (" + new Date().toLocaleTimeString() + ")");
+      syncInProgress = false;
+    } else {
+      console.error("更新 Gist 失敗:", data);
+      syncInProgress = false;
+    }
+  })
+  .catch(function(err){
+    console.error("同步失敗:", err);
+    syncInProgress = false;
+  });
+}
+
+function loadFromGist(){
+  if(!GIST_ID || !navigator.onLine) return;
+  
+  console.log("☁️ 從雲端載入資料...");
+  
+  fetch("https://api.github.com/gists/" + GIST_ID, {
+    headers: {
+      "Authorization": "token " + GITHUB_TOKEN
+    }
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(data){
+    if(data.files && data.files["sales-records.json"]){
+      var content = data.files["sales-records.json"].content;
+      var cloudData = JSON.parse(content);
+      
+      // 比較本地和雲端的時間戳
+      var localTimestamp = localStorage.getItem("lastSync") || "1970-01-01";
+      var cloudTimestamp = cloudData.lastSync || "1970-01-01";
+      
+      if(cloudTimestamp > localTimestamp){
+        // 雲端較新,使用雲端資料
+        visitRecords = cloudData.visitRecords || [];
+        customSKUs = cloudData.customSKUs || {};
+        hiddenSKUs = cloudData.hiddenSKUs || {};
+        restoredSKUs = cloudData.restoredSKUs || {};
+        
+        // 存到本地
+        localStorage.setItem("vrecs", JSON.stringify(visitRecords));
+        localStorage.setItem("cskus", JSON.stringify(customSKUs));
+        localStorage.setItem("hidden", JSON.stringify(hiddenSKUs));
+        localStorage.setItem("restored", JSON.stringify(restoredSKUs));
+        localStorage.setItem("lastSync", cloudTimestamp);
+        
+        console.log("☁️ 已從雲端載入 " + visitRecords.length + " 筆紀錄");
+        renderRecHistory();
+      } else {
+        console.log("✓ 本地資料較新,不需要更新");
+      }
+    }
+  })
+  .catch(function(err){
+    console.error("載入雲端資料失敗:", err);
+  });
+}
+
+function manualSync(){
+  var btn = document.getElementById("sync-btn");
+  btn.disabled = true;
+  btn.textContent = "⏳ 同步中...";
+  
+  if(!navigator.onLine){
+    alert("❌ 無網路連線");
+    btn.disabled = false;
+    btn.textContent = "☁️ 同步";
+    return;
+  }
+  
+  // 先上傳
+  syncToGist();
+  
+  // 等2秒後再下載
+  setTimeout(function(){
+    if(GIST_ID){
+      loadFromGist();
+    }
+    setTimeout(function(){
+      btn.disabled = false;
+      btn.textContent = "☁️ 同步";
+      alert("✅ 同步完成!\n共 " + visitRecords.length + " 筆紀錄");
+    }, 1000);
+  }, 2000);
+}
 function saveHidden(){try{_store.set("hidden",JSON.stringify(hiddenSKUs));}catch(e){}}
 function saveRestored(){try{_store.set("restored",JSON.stringify(restoredSKUs));}catch(e){}}
 
@@ -1698,20 +1909,25 @@ function exportManagerPDF(){
     {key:"miaoli",     label:"苗栗"},
   ];
 
-  // 計算各門市本月總量(使用SUMMARY_DATA)
-  var storeTotals = {}, regionTotals = {}, regionLY = {}, regionAmt = {}, regionLYAmt = {};
+  // 計算各門市本月總量和商品明細
+  var storeTotals = {}, storeProducts = {}, regionTotals = {}, regionLY = {};
   STORES.forEach(function(st){
     var summary = (typeof SUMMARY_DATA!=="undefined" && SUMMARY_DATA[st.id] && SUMMARY_DATA[st.id][month]) || {};
     var orders = summary.orders || 0;
     var amount = summary.amount || 0;
     var lyOrders = summary.lyOrders || 0;
     var lyAmount = summary.lyAmount || 0;
+    
+    // 取得商品明細
+    var storeMonthly = (typeof MONTHLY_DATA!=="undefined" && MONTHLY_DATA[st.id]) || {};
+    var items = storeMonthly[month] || [];
+    
     storeTotals[st.id] = {orders:orders, amount:amount, lyOrders:lyOrders, lyAmount:lyAmount};
+    storeProducts[st.id] = items.slice(0, 10); // 只取前10項
+    
     var reg = st.region||"other";
     regionTotals[reg] = (regionTotals[reg]||0)+orders;
     regionLY[reg] = (regionLY[reg]||0)+lyOrders;
-    regionAmt[reg] = (regionAmt[reg]||0)+amount;
-    regionLYAmt[reg] = (regionLYAmt[reg]||0)+lyAmount;
   });
 
   // 區域卡片
@@ -1738,21 +1954,42 @@ function exportManagerPDF(){
 
     var rows = regStores.map(function(st, i){
       var t = storeTotals[st.id]||{orders:0,amount:0,lyOrders:0,lyAmount:0};
-      var pct = t.lyAmount>0 ? Math.round(((t.amount-t.lyAmount)/t.lyAmount)*100) : null;
+      var products = storeProducts[st.id]||[];
+      
+      // 計算總增減
+      var totalThis = products.reduce(function(a,b){ return a+(b[2]||0); },0);
+      var totalLY = products.reduce(function(a,b){ return a+(b[3]||0); },0);
+      var pct = totalLY>0 ? Math.round(((totalThis-totalLY)/totalLY)*100) : null;
       var pctStr = pct!==null ? (pct>0?"+":"")+pct+"%" : "—";
       var pctCol = pct!==null ? (pct>5?"#27ae60":pct<-5?"#c0392b":"#666") : "#999";
-      var bg = i%2===0 ? "" : "background:#fafafa";
-      var amtStr = t.amount>0 ? t.amount.toLocaleString() : "—";
-      var lyAmtStr = t.lyAmount>0 ? t.lyAmount.toLocaleString() : "—";
-      return "<tr style='"+bg+"'><td>"+st.name+"</td><td>"+t.orders+"筆/$"+amtStr+"</td><td>"+t.lyOrders+"筆/$"+lyAmtStr+"</td>"
-        +"<td style='color:"+pctCol+";font-weight:600'>"+pctStr+"</td></tr>";
+      
+      var bg = i%2===0 ? "#fff" : "#fafafa";
+      
+      // 商品列表
+      var productRows = products.map(function(p){
+        var itemPct = p[3]>0 ? Math.round(((p[2]-p[3])/p[3])*100) : null;
+        var itemPctStr = itemPct!==null ? (itemPct>0?"+":"")+itemPct+"%" : "—";
+        var itemPctCol = itemPct!==null ? (itemPct>5?"#27ae60":itemPct<-5?"#c0392b":"#666") : "#999";
+        return "<tr style='background:"+bg+"'>"
+          +"<td style='padding-left:20px;font-size:10px;color:#666'>"+p[0]+"</td>"
+          +"<td style='text-align:right'>"+p[2]+"</td>"
+          +"<td style='text-align:right'>"+p[3]+"</td>"
+          +"<td style='text-align:right;color:"+itemPctCol+"'>"+itemPctStr+"</td>"
+          +"</tr>";
+      }).join("");
+      
+      return "<tr style='background:"+bg+"'>"
+        +"<td colspan='4' style='font-weight:600;padding:8px;border-top:2px solid #ddd'>"
+        +st.name+"　<span style='font-size:10px;font-weight:normal;color:#666'>"+t.orders+"筆/$"+t.amount.toLocaleString()+"</span>"
+        +"　<span style='color:"+pctCol+"'>"+pctStr+"</span>"
+        +"</td></tr>"+productRows;
     }).join("");
 
     return "<div class='region-header'>"
       +"<span>"+r.label+"地區　"+regStores.length+" 家</span>"
       +"<span>本月 <b>"+regTotal+"</b>　去年 "+regLY+"　<span style='color:"+regPctCol+"'>"+regPctStr+"</span></span>"
       +"</div>"
-      +"<table><tr><th>門市</th><th>本月</th><th>去年同月</th><th>增減</th></tr>"+rows+"</table>";
+      +"<table><tr><th>品項</th><th style='text-align:right;width:80px'>本月</th><th style='text-align:right;width:80px'>去年</th><th style='text-align:right;width:60px'>增減</th></tr>"+rows+"</table>";
   }).join("");
 
   var now = new Date().toLocaleDateString("zh-TW");
@@ -1883,6 +2120,33 @@ function init(){
   buildRouteList();
   var today=new Date();
   document.getElementById("report-month").value=today.getFullYear()+"-"+(String(today.getMonth()+1).padStart(2,"0"));
+  
+  // 每5分鐘自動儲存一次
+  setInterval(function(){
+    if(visitRecords.length > 0){
+      saveVRecs();
+      console.log("🔄 自動儲存完成");
+    }
+  }, 300000); // 5分鐘
+  
+  // 離開頁面前儲存
+  window.addEventListener("beforeunload", function(){
+    saveVRecs();
+  });
+  
+  // 每天提醒匯出備份
+  var lastBackup = localStorage.getItem("lastBackup");
+  var now = Date.now();
+  if(!lastBackup || (now - parseInt(lastBackup)) > 86400000){
+    setTimeout(function(){
+      if(visitRecords.length > 0){
+        if(confirm("💾 建議定期匯出CSV備份!\n是否現在匯出?")){
+          exportAllRecords();
+        }
+        localStorage.setItem("lastBackup", now.toString());
+      }
+    }, 3000);
+  }
 }
 
 
