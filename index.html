@@ -638,17 +638,20 @@ function saveZones(){try{_store.set("zones",JSON.stringify(userZones));}catch(e)
 function getZone(sid){return userZones[sid]||DEFAULT_ZONES[sid]||"mixed";}
 
 function loadStorage(){
+  console.log("🔵 開始載入 localStorage...");
+  
   try{var a=_store.get("cskus");if(a)customSKUs=JSON.parse(a);}catch(e){console.error("載入自訂品項失敗:",e);}
   try{
     var b=_store.get("vrecs");
+    console.log("🔵 localStorage.getItem('vrecs'):", b ? (b.length + " 字元") : "null");
     if(b){
       visitRecords=JSON.parse(b);
-      console.log("✓ 已載入 " + visitRecords.length + " 筆抄貨紀錄");
+      console.log("✅ 已載入 " + visitRecords.length + " 筆抄貨紀錄");
     } else {
-      console.log("ℹ️ 沒有歷史抄貨紀錄");
+      console.log("⚠️ localStorage 裡沒有 vrecs,是全新的!");
     }
   }catch(e){
-    console.error("載入抄貨紀錄失敗:",e);
+    console.error("❌ 載入抄貨紀錄失敗:",e);
     alert("⚠️ 載入歷史紀錄時發生錯誤,資料可能遺失!");
   }
   try{var c=_store.get("hidden");if(c)hiddenSKUs=JSON.parse(c);}catch(e){console.error("載入隱藏品項失敗:",e);}
@@ -657,7 +660,10 @@ function loadStorage(){
   // 從雲端載入最新資料
   GIST_ID = localStorage.getItem("gist_id");
   if(GIST_ID){
+    console.log("🔵 找到 GIST_ID:", GIST_ID);
     loadFromGist();
+  } else {
+    console.log("🔵 沒有 GIST_ID,首次使用");
   }
   
   loadZones();
@@ -1726,7 +1732,11 @@ function saveRecord(){
   var note=document.getElementById("rec-note").value.trim();
   visitRecords=visitRecords.filter(function(r){return !(r.date===ds&&r.store_id===recStoreId);});
   visitRecords.unshift({date:ds,store_id:recStoreId,store_name:store.name,items:items,note:note});
+  
+  console.log("🔵 準備儲存:", visitRecords.length, "筆紀錄");
   saveVRecs();
+  console.log("🔵 saveVRecs() 已執行");
+  
   renderRecHistory();
 
   // 同步更新 last_order 到 localStorage
@@ -1738,6 +1748,20 @@ function saveRecord(){
   localStorage.setItem("last_order_override", JSON.stringify(overrides));
 
   clearRecForm();
+  
+  // 立即驗證是否真的存進去了
+  setTimeout(function(){
+    var check = localStorage.getItem("vrecs");
+    if(check){
+      var parsed = JSON.parse(check);
+      console.log("🟢 驗證: localStorage 有", parsed.length, "筆紀錄");
+      alert("✅ 已儲存 " + store.name + " " + ds + " (" + items.length + " 項)");
+    } else {
+      console.error("🔴 localStorage 裡沒有 vrecs!");
+      alert("❌ 儲存失敗!請立即匯出CSV!");
+    }
+  }, 500);
+}
   // 自動同步到 GitHub
   syncRecordsToGitHub();
   alert("已儲存 "+store.name+" "+ds+" 抄貨紀錄（"+items.length+" 項）");
