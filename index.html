@@ -635,15 +635,42 @@ function saveZones(){try{_store.set("zones",JSON.stringify(userZones));}catch(e)
 function getZone(sid){return userZones[sid]||DEFAULT_ZONES[sid]||"mixed";}
 
 function loadStorage(){
-  try{var a=_store.get("cskus");if(a)customSKUs=JSON.parse(a);}catch(e){}
-  try{var b=_store.get("vrecs");if(b)visitRecords=JSON.parse(b);}catch(e){}
-  try{var c=_store.get("hidden");if(c)hiddenSKUs=JSON.parse(c);}catch(e){}
-  try{var d=_store.get("restored");if(d)restoredSKUs=JSON.parse(d);}catch(e){}
+  console.log("🔵 開始載入 localStorage...");
+  try{var a=_store.get("cskus");if(a)customSKUs=JSON.parse(a);}catch(e){console.error("載入customSKUs失敗:",e);}
+  try{
+    var b=_store.get("vrecs");
+    console.log("🔵 localStorage.getItem('vrecs'):", b ? (b.length + " 字元") : "null");
+    if(b){
+      visitRecords=JSON.parse(b);
+      console.log("✅ 已載入", visitRecords.length, "筆抄貨紀錄");
+    } else {
+      console.log("ℹ️  localStorage 裡沒有 vrecs");
+    }
+  }catch(e){
+    console.error("❌ 載入visitRecords失敗:",e);
+  }
+  try{var c=_store.get("hidden");if(c)hiddenSKUs=JSON.parse(c);}catch(e){console.error("載入hiddenSKUs失敗:",e);}
+  try{var d=_store.get("restored");if(d)restoredSKUs=JSON.parse(d);}catch(e){console.error("載入restoredSKUs失敗:",e);}
   loadZones();
   loadCheckins();
 }
 function saveCSkus(){try{_store.set("cskus",JSON.stringify(customSKUs));}catch(e){}}
-function saveVRecs(){try{_store.set("vrecs",JSON.stringify(visitRecords));}catch(e){}}
+function saveVRecs(){
+  try{
+    console.log("🔵 準備儲存", visitRecords.length, "筆紀錄");
+    _store.set("vrecs",JSON.stringify(visitRecords));
+    console.log("✅ 已儲存到 localStorage");
+    // 立即驗證
+    var check = localStorage.getItem("vrecs");
+    if(check){
+      console.log("✅ 驗證成功: localStorage 有資料", check.length, "字元");
+    } else {
+      console.error("❌ 驗證失敗: localStorage 是空的!");
+    }
+  }catch(e){
+    console.error("❌ saveVRecs 錯誤:", e);
+  }
+}
 function saveHidden(){try{_store.set("hidden",JSON.stringify(hiddenSKUs));}catch(e){}}
 function saveRestored(){try{_store.set("restored",JSON.stringify(restoredSKUs));}catch(e){}}
 
