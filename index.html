@@ -1524,6 +1524,7 @@ function clearRecForm(){
 }
 
 function saveRecord(){
+  console.log("🟦 saveRecord 開始執行");
   if(!recStoreId){alert("請選擇門市");return;}
   var store=STORES.filter(function(s){return s.id===recStoreId;})[0];
   var skus=getActiveSkus(recStoreId);
@@ -1535,14 +1536,19 @@ function saveRecord(){
       items.push({id:s.sku_id,name:s.sku_name,unit:s.unit,ordered:or});
     }
   });
+  console.log("🟦 收集到", items.length, "個品項");
   if(items.length===0){alert("請至少輸入一項數量");return;}
   var recDateEl=document.getElementById("rec-date");
   var today=new Date();
   var ds=recDateEl&&recDateEl.value?recDateEl.value:(today.getFullYear()+"-"+(String(today.getMonth()+1).padStart(2,"0"))+"-"+(String(today.getDate()).padStart(2,"0")));
   var note=document.getElementById("rec-note").value.trim();
+  console.log("🟦 日期:", ds, "門市:", store.name);
   visitRecords=visitRecords.filter(function(r){return !(r.date===ds&&r.store_id===recStoreId);});
   visitRecords.unshift({date:ds,store_id:recStoreId,store_name:store.name,items:items,note:note});
+  console.log("🟦 visitRecords 現在有", visitRecords.length, "筆");
+  console.log("🟦 準備呼叫 saveVRecs()...");
   saveVRecs();
+  console.log("🟦 saveVRecs() 已執行完畢");
   renderRecHistory();
 
   // 同步更新 last_order 到 localStorage
