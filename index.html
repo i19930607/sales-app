@@ -399,50 +399,101 @@ var GITHUB_TOKEN = "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";
 var GITHUB_USER  = "i19930607";
 var GITHUB_REPO  = "sales-app";
 
-function syncRecordsToGitHub(){
-  if(visitRecords.length === 0) return;
+// === Gist 雲端同步 (跨裝置) ===
+var GIST_ID = null;
+var GITHUB_TOKEN = "ghp_bJRyGfC0FdvuuwqXbGkBdz50HSlWDw0bsaaz";
+
+function syncToCloud(){
+  console.log("☁️ 同步到雲端...");
   
-  // 把所有抄貨紀錄轉成 CSV 格式
-  var lines = ["order_id,order_date,store_id,store_name_raw,sku_id,sku_name,qty,unit"];
-  visitRecords.forEach(function(r){
-    r.items.forEach(function(it){
-      lines.push([
-        "REC-"+r.store_id+"-"+r.date,
-        r.date, r.store_id, r.store_name,
-        it.id, it.name, it.ordered, it.unit
-      ].join(","));
-    });
+  if(!navigator.onLine){
+    console.log("📴 離線,跳過");
+    return;
+  }
+  
+  GIST_ID = localStorage.getItem("gist_id");
+  
+  var payload = JSON.stringify({
+    records: visitRecords,
+    timestamp: new Date().toISOString()
   });
-  var csvContent = lines.join("\n");
-  var b64 = btoa(unescape(encodeURIComponent(csvContent)));
   
-  var apiUrl = "https://api.github.com/repos/"+GITHUB_USER+"/"+GITHUB_REPO+"/contents/抄貨紀錄_all.csv";
-  var headers = {
-    "Authorization": "token "+GITHUB_TOKEN,
-    "Content-Type": "application/json"
-  };
+  if(GIST_ID){
+    cloudUpdate(payload);
+  } else {
+    cloudCreate(payload);
+  }
+}
+
+function cloudCreate(data){
+  fetch("https://api.github.com/gists", {
+    method: "POST",
+    headers: {"Authorization": "token " + GITHUB_TOKEN},
+    body: JSON.stringify({
+      description: "小北抄貨紀錄",
+      public: false,
+      files: {"data.json": {content: data}}
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.id){
+      GIST_ID = d.id;
+      localStorage.setItem("gist_id", d.id);
+      console.log("✅ 雲端已建立");
+    }
+  })
+  .catch(function(e){console.error("❌",e);});
+}
+
+function cloudUpdate(data){
+  fetch("https://api.github.com/gists/" + GIST_ID, {
+    method: "PATCH",
+    headers: {"Authorization": "token " + GITHUB_TOKEN},
+    body: JSON.stringify({
+      files: {"data.json": {content: data}}
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.id) console.log("✅ 雲端已更新");
+  })
+  .catch(function(e){console.error("❌",e);});
+}
+
+function cloudLoad(){
+  GIST_ID = localStorage.getItem("gist_id");
+  if(!GIST_ID || !navigator.onLine) return;
   
-  // 先取得現有檔案的 SHA
-  fetch(apiUrl, {headers: headers})
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      var sha = data.sha || "";
-      var body = {
-        message: "Update visit records "+new Date().toISOString().slice(0,10),
-        content: b64,
-        sha: sha
-      };
-      return fetch(apiUrl, {
-        method: "PUT",
-        headers: headers,
-        body: JSON.stringify(body)
-      });
-    })
-    .then(function(r){
-      if(r.ok) console.log("✓ 抄貨紀錄已同步到 GitHub");
-      else r.text().then(function(t){ console.error("✗ 同步失敗:", t); });
-    })
-    .catch(function(e){ console.error("✗ GitHub 同步錯誤:", e); });
+  console.log("☁️ 從雲端載入...");
+  
+  fetch("https://api.github.com/gists/" + GIST_ID, {
+    headers: {"Authorization": "token " + GITHUB_TOKEN}
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.files && d.files["data.json"]){
+      var cloud = JSON.parse(d.files["data.json"].content);
+      var cloudTime = cloud.timestamp || "1970";
+      var localTime = localStorage.getItem("last_sync") || "1970";
+      
+      if(cloudTime > localTime){
+        visitRecords = cloud.records || [];
+        localStorage.setItem("vrecs", JSON.stringify(visitRecords));
+        localStorage.setItem("last_sync", cloudTime);
+        console.log("✅ 從雲端載入", visitRecords.length, "筆");
+        renderRecHistory();
+      }
+    }
+  })
+  .catch(function(e){console.error("❌",e);});
+}
+
+function syncRecordsToGitHub(){
+  syncToCloud();
+}
+function loadVisitRecordsFromGitHub(){
+  cloudLoad();
 }
 
 var _storeZones={};
@@ -1560,8 +1611,8 @@ function saveRecord(){
   localStorage.setItem("last_order_override", JSON.stringify(overrides));
 
   clearRecForm();
-  // syncRecordsToGitHub(); // 暫時禁用
-  console.log("⚠️ GitHub 同步已禁用,資料只存在 localStorage");
+  syncRecordsToGitHub();
+  console.log("☁️ 雲端同步已啟用");
   alert("已儲存 "+store.name+" "+ds+" 抄貨紀錄（"+items.length+" 項）");
 }
 
@@ -2030,8 +2081,8 @@ try{
   init();
   loadXGBPredictions();
   loadStoreZones();
-  // loadVisitRecordsFromGitHub(); // 暫時禁用
-  console.log("⚠️ GitHub 載入已禁用");
+  loadVisitRecordsFromGitHub();
+  console.log("☁️ 雲端載入已啟用");
   renderCheckinStatus();
   // 自動填入已存的 API Key
   var savedKey = localStorage.getItem("np_apikey");
