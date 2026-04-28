@@ -1560,8 +1560,8 @@ function saveRecord(){
   localStorage.setItem("last_order_override", JSON.stringify(overrides));
 
   clearRecForm();
-  // 自動同步到 GitHub
-  syncRecordsToGitHub();
+  // syncRecordsToGitHub(); // 暫時禁用
+  console.log("⚠️ GitHub 同步已禁用,資料只存在 localStorage");
   alert("已儲存 "+store.name+" "+ds+" 抄貨紀錄（"+items.length+" 項）");
 }
 
@@ -2030,7 +2030,8 @@ try{
   init();
   loadXGBPredictions();
   loadStoreZones();
-  loadVisitRecordsFromGitHub();
+  // loadVisitRecordsFromGitHub(); // 暫時禁用
+  console.log("⚠️ GitHub 載入已禁用");
   renderCheckinStatus();
   // 自動填入已存的 API Key
   var savedKey = localStorage.getItem("np_apikey");
