@@ -872,21 +872,41 @@ function getAllSkus(storeId){
 }
 
 function getSkus(storeId){
-  // 用於叫貨預測：過濾手動下架 + 超過180天自動隱藏
+  // 用於叫貨預測：過濾手動下架 + 超過180天自動隱藏(動態計算日期)
   var hidden=hiddenSKUs[storeId]||[];
   var restored=restoredSKUs[storeId]||[];
+  var now=new Date();
   return getAllSkus(storeId).filter(function(s){
     if(hidden.indexOf(s.sku_id)!==-1) return false;
-    if(s.default_hidden && restored.indexOf(s.sku_id)===-1) return false;
+    if(s.last_order){
+      var parts=s.last_order.split("/");
+      if(parts.length===3){
+        var lastDate=new Date(parts[0]+"-"+parts[1]+"-"+parts[2]);
+        var days=(now-lastDate)/(1000*60*60*24);
+        if(days>180 && restored.indexOf(s.sku_id)===-1) return false;
+      }
+    }
     return true;
   });
 }
 
 function getActiveSkus(storeId){
-  // 用於抄貨紀錄：只過濾手動下架，保留所有你代理的品項
+  // 用於抄貨紀錄: 過濾手動下架,但保留所有近期還有叫的品項
   var hidden=hiddenSKUs[storeId]||[];
+  var restored=restoredSKUs[storeId]||[];
+  var now=new Date();
   return getAllSkus(storeId).filter(function(s){
-    return hidden.indexOf(s.sku_id)===-1;
+    if(hidden.indexOf(s.sku_id)!==-1) return false; // 手動下架
+    // 重新計算 days_since (而不是用資料生成時的 default_hidden)
+    if(s.last_order){
+      var parts=s.last_order.split("/");
+      if(parts.length===3){
+        var lastDate=new Date(parts[0]+"-"+parts[1]+"-"+parts[2]);
+        var days=(now-lastDate)/(1000*60*60*24);
+        if(days>180 && restored.indexOf(s.sku_id)===-1) return false;
+      }
+    }
+    return true;
   });
 }
 
@@ -1069,6 +1089,7 @@ function renderWeather(){
 
 function renderSkuList(containerId,storeId,prefix){
   var skus=(prefix==="rec")?getActiveSkus(storeId):getSkus(storeId);
+  console.log("🔵 renderSkuList:", containerId, storeId, prefix, "→", skus.length, "個品項");
   var html="";
   for(var i=0;i<skus.length;i++){
     var s=skus[i];
@@ -1917,23 +1938,14 @@ function exportManagerPDF(){
     var lyOrders = summary.lyOrders || 0;
     var lyAmount = summary.lyAmount || 0;
     
-    // 取得本月和去年同月的商品明細
+    // 取得本月和去年同月的商品明細(複製陣列,避免修改原資料)
     var storeMonthly = (typeof MONTHLY_DATA!=="undefined" && MONTHLY_DATA[st.id]) || {};
-    var items = storeMonthly[month] || [];
+    var items = (storeMonthly[month] || []).slice();
     
-    // 加入這家店所有歷史品項(從 STORE_SKUS_DATA),即使本月和去年都沒叫貨
-    var allSkus = (typeof STORE_SKUS_DATA!=="undefined" && STORE_SKUS_DATA[st.id]) || [];
-    var existingSkus = {};
-    items.forEach(function(it){ existingSkus[it[1]] = true; });
+    // 過濾掉本月和去年都沒賣的(沒比較意義)
+    items = items.filter(function(it){ return (it[2]||0) > 0 || (it[3]||0) > 0; });
     
-    // 把歷史曾經叫過但本月+去年都沒叫的品項補進去(數量都是0)
-    allSkus.forEach(function(sku){
-      if(!existingSkus[sku.sku_id]){
-        items.push([sku.sku_name, sku.sku_id, 0, 0]);
-      }
-    });
-    
-    // 排序: 本月有訂貨 > 去年有訂貨 > 兩邊都沒
+    // 排序: 本月有訂貨 > 去年有訂貨(下架)
     items.sort(function(a,b){
       var aHas = (a[2]>0 ? 2 : 0) + (a[3]>0 ? 1 : 0);
       var bHas = (b[2]>0 ? 2 : 0) + (b[3]>0 ? 1 : 0);
