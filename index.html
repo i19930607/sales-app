@@ -616,14 +616,72 @@ var _xgbLoadedAt = null;
 var _isPreHoliday = false;
 var _holidayLength = 0;
 
+// 台灣 2025-2026 完整連假資料 (連假第一天, 天數)
+// 含新增5個國定假日: 勞動節(全體)、教師節、光復節、行憲紀念日、小年夜
+var TW_HOLIDAYS = [
+  // 2025 上半年
+  ["2025-01-01", 1],  // 元旦
+  ["2025-01-25", 9],  // 農曆春節 (含小年夜1/25, 除夕1/27-初五2/2, 共9天)
+  ["2025-02-28", 3],  // 和平紀念日連假 (2/28-3/2)
+  ["2025-04-03", 4],  // 兒童節清明連假 (4/3-4/6)
+  ["2025-05-01", 4],  // 勞動節 (5/1週四, 請5/2可連休4天)
+  // 2025 下半年 (新增假日)
+  ["2025-05-31", 3],  // 端午連假 (5/31-6/1)
+  ["2025-09-27", 3],  // 教師節/孔子誕辰 (9/27-9/29, 新增假日)
+  ["2025-10-04", 3],  // 中秋連假 (10/4-10/6)
+  ["2025-10-10", 3],  // 國慶連假 (10/10-10/12)
+  ["2025-10-24", 3],  // 台灣光復節 (10/24-10/26, 新增假日)
+  ["2025-12-25", 4],  // 行憲紀念日 (12/25-12/28, 新增假日)
+  // 2026
+  ["2026-01-01", 4],  // 元旦連假 (1/1-1/4)
+  ["2026-02-14", 7],  // 農曆春節 (含小年夜2/14, 最少7天, 2/14-2/22)
+  ["2026-02-27", 2],  // 和平紀念日 (2/27補假-2/28)
+  ["2026-04-03", 3],  // 兒童節清明 (4/3-4/5)
+  ["2026-05-01", 3],  // 勞動節連假
+  ["2026-06-19", 3],  // 端午連假
+  ["2026-09-28", 1],  // 教師節 (新增假日)
+  ["2026-10-09", 3],  // 國慶連假 (10/9補假-10/11)
+  ["2026-10-25", 1],  // 台灣光復節 (新增假日)
+  ["2026-12-25", 4],  // 行憲紀念日連假 (新增假日)
+];
+
+function checkUpcomingHolidays(){
+  // 在連假前 7 天開始提醒 (不是當天!)
+  var today = new Date();
+  today.setHours(0,0,0,0);
+  var WARN_DAYS_BEFORE = 7; // 提前 7 天
+  
+  for(var i = 0; i < TW_HOLIDAYS.length; i++){
+    var h = TW_HOLIDAYS[i];
+    var holidayDate = new Date(h[0]);
+    holidayDate.setHours(0,0,0,0);
+    var daysUntil = Math.round((holidayDate - today) / 86400000);
+    
+    if(daysUntil >= 0 && daysUntil <= WARN_DAYS_BEFORE){
+      _isPreHoliday = true;
+      _holidayLength = h[1];
+      _daysUntilHoliday = daysUntil;
+      renderHolidayBanner();
+      return;
+    }
+  }
+  _isPreHoliday = false;
+  renderHolidayBanner();
+}
+
+var _daysUntilHoliday = 0;
+
 function renderHolidayBanner(){
   var banner = document.getElementById("holiday-banner");
   if(!banner) return;
   if(_isPreHoliday && _holidayLength > 0){
     banner.style.display = "block";
+    var daysMsg = _daysUntilHoliday === 0 ? "連假今天開始" 
+      : "距連假還有 <strong>" + _daysUntilHoliday + " 天</strong>";
     banner.innerHTML = "<span style=\"font-size:18px\">⚠️</span> "
-      + "本週連假 <strong>" + _holidayLength + " 天</strong>，建議叫貨量增加約 "
-      + Math.round(_holidayLength * 30) + "%，司機休假期間門市需備足存貨。";
+      + daysMsg + "，連假共 <strong>" + _holidayLength + " 天</strong>。"
+      + "建議提前叫貨，增加約 " + Math.round(_holidayLength * 30) + "%，"
+      + "司機休假期間門市需備足存貨。";
   } else {
     banner.style.display = "none";
   }
@@ -2098,6 +2156,7 @@ document.addEventListener("click",function(e){
 // ── init ─────────────────────────────────────────────────────
 function init(){
   loadStorage();
+  checkUpcomingHolidays();
   ["sel-predict","sel-report","sel-addsku","sel-record"].forEach(fillSelect);
   buildRouteList();
   var today=new Date();
