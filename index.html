@@ -474,55 +474,86 @@ var GITHUB_USER  = "i19930607";
 var GITHUB_REPO  = "sales-app";
 
 function syncRecordsToGitHub(){
-  if(visitRecords.length === 0) return;
-  
-  // 把所有抄貨紀錄轉成 CSV 格式
-  var lines = ["order_id,order_date,store_id,store_name_raw,sku_id,sku_name,qty,unit"];
-  visitRecords.forEach(function(r){
-    r.items.forEach(function(it){
-      lines.push([
-        "REC-"+r.store_id+"-"+r.date,
-        r.date, r.store_id, r.store_name,
-        it.id, it.name, it.ordered, it.unit
-      ].join(","));
-    });
-  });
-  var csvContent = lines.join("\n");
-  var b64 = btoa(unescape(encodeURIComponent(csvContent)));
-  
-  var apiUrl = "https://api.github.com/repos/"+GITHUB_USER+"/"+GITHUB_REPO+"/contents/抄貨紀錄_all.csv";
-  var headers = {
-    "Authorization": "token "+GITHUB_TOKEN,
-    "Content-Type": "application/json"
-  };
-  
-  // 先取得現有檔案的 SHA
-  fetch(apiUrl, {headers: headers})
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      var sha = data.sha || "";
-      var body = {
-        message: "Update visit records "+new Date().toISOString().slice(0,10),
-        content: b64,
-        sha: sha
-      };
-      return fetch(apiUrl, {
-        method: "PUT",
-        headers: headers,
-        body: JSON.stringify(body)
-      });
-    })
-    .then(function(r){
-      if(r.ok) console.log("✓ 抄貨紀錄已同步到 GitHub");
-      else r.text().then(function(t){ console.error("✗ 同步失敗:", t); });
-    })
-    .catch(function(e){ console.error("✗ GitHub 同步錯誤:", e); });
+  supabaseSync();
 }
 
-var _storeZones={};
+// ── Supabase 雲端同步 ────────────────────────────────────────
+var SUPA_URL = "https://jryudsjlzmyqmmryejzk.supabase.co";
+var SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyeXVkc2psem15cW1tcnllanprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NzA5MDMsImV4cCI6MjA5MzA0NjkwM30.oPgC6um-0WmKd1SghfiBYPIUixDCcHNL964lT_gcoW8";
+var _syncTimer = null;
 
-// ── 打卡功能 ──────────────────────────────────────────────────
-var _checkins = {}; // { "2026-04-20": ["S001","S003",...] }
+function supabaseSync(){
+  // 防止短時間內多次觸發
+  if(_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(function(){ _doSync(); }, 2000);
+}
+
+function _doSync(){
+  if(!navigator.onLine){ console.log("📴 離線,跳過同步"); return; }
+  if(!visitRecords || visitRecords.length === 0) return;
+  
+  console.log("☁️ 同步到 Supabase...");
+  
+  // 把 visitRecords 展開成每一行
+  var rows = [];
+  visitRecords.forEach(function(r){
+    r.items.forEach(function(it){
+      rows.push({
+        record_date: r.date,
+        store_id: r.store_id,
+        store_name: r.store_name,
+        sku_id: it.id,
+        sku_name: it.name,
+        quantity: parseFloat(it.ordered) || 0,
+        unit: it.unit || "",
+        note: r.note || ""
+      });
+    });
+  });
+  
+  // 先刪除所有舊資料,再寫入新的
+  fetch(SUPA_URL + "/rest/v1/visit_records?record_date=gte.2020-01-01", {
+    method: "DELETE",
+    headers: {
+      "apikey": SUPA_KEY,
+      "Authorization": "Bearer " + SUPA_KEY,
+      "Content-Type": "application/json"
+    }
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error("刪除失敗: " + r.status);
+    // 分批寫入(每批 500 筆,避免超時)
+    return _insertBatch(rows, 0);
+  })
+  .then(function(){
+    console.log("✅ 已同步 " + visitRecords.length + " 筆紀錄到雲端");
+    localStorage.setItem("last_cloud_sync", new Date().toISOString());
+  })
+  .catch(function(e){
+    console.error("❌ 雲端同步失敗:", e);
+  });
+}
+
+function _insertBatch(rows, offset){
+  var batch = rows.slice(offset, offset + 500);
+  if(batch.length === 0) return Promise.resolve();
+  
+  return fetch(SUPA_URL + "/rest/v1/visit_records", {
+    method: "POST",
+    headers: {
+      "apikey": SUPA_KEY,
+      "Authorization": "Bearer " + SUPA_KEY,
+      "Content-Type": "application/json",
+      "Prefer": "return=minimal"
+    },
+    body: JSON.stringify(batch)
+  })
+  .then(function(r){
+    if(!r.ok) return r.text().then(function(t){ throw new Error(t); });
+    return _insertBatch(rows, offset + 500);
+  });
+}
+
 
 function getTodayKey(){
   var d = new Date();
@@ -599,60 +630,79 @@ function renderHolidayBanner(){
 }
 
 function loadVisitRecordsFromGitHub(){
-  var baseUrl = window.location.href.replace(/index\.html.*$/, "");
-  fetch(baseUrl + "抄貨紀錄_all.csv?" + Date.now())
-    .then(function(r){ if(!r.ok) throw new Error("no file"); return r.text(); })
-    .then(function(csv){
-      var lines = csv.trim().split("\n");
-      if(lines.length < 2) return;
-      // 解析 CSV：order_id,order_date,store_id,store_name_raw,sku_id,sku_name,qty,unit
-      var records = {};
-      for(var i=1; i<lines.length; i++){
-        var cols = lines[i].split(",");
-        if(cols.length < 8) continue;
-        var date     = cols[1].trim();
-        var storeId  = cols[2].trim();
-        var storeName= cols[3].trim();
-        var skuId    = cols[4].trim();
-        var skuName  = cols[5].trim();
-        var qty      = cols[6].trim();
-        var unit     = cols[7].trim();
-        var key      = date + "_" + storeId;
-        if(!records[key]){
-          records[key] = {date:date, store_id:storeId, store_name:storeName, items:[], note:""};
-        }
-        if(qty && qty !== "0"){
-          records[key].items.push({id:skuId, name:skuName, unit:unit, ordered:qty});
-        }
-      }
-      // 轉成陣列，依日期排序
-      var loaded = Object.values(records).sort(function(a,b){
-        return b.date.localeCompare(a.date);
-      });
-      if(loaded.length > 0){
-        visitRecords = loaded;
-        saveVRecs();
-        renderRecHistory();
-        console.log("✓ 從 GitHub 載入抄貨紀錄：" + loaded.length + " 筆");
-
-        // 同步更新 last_order_override（供叫貨預測顯示最新日期）
-        var overrides = {};
-        loaded.forEach(function(r){
-          if(!overrides[r.store_id]) overrides[r.store_id] = {};
-          r.items.forEach(function(it){
-            var cur = overrides[r.store_id][it.id];
-            if(!cur || r.date > cur){
-              overrides[r.store_id][it.id] = r.date;
-            }
-          });
-        });
-        try{ localStorage.setItem("last_order_override", JSON.stringify(overrides)); }catch(e){}
-      }
-    })
-    .catch(function(){
-      console.log("尚無雲端抄貨紀錄，使用本機資料");
-    });
+  supabaseLoad();
 }
+
+function supabaseLoad(){
+  if(!navigator.onLine){ console.log("📴 離線,從本地載入"); return; }
+  
+  console.log("☁️ 從 Supabase 載入...");
+  
+  fetch(SUPA_URL + "/rest/v1/visit_records?select=*&order=record_date.desc&limit=50000", {
+    headers: {
+      "apikey": SUPA_KEY,
+      "Authorization": "Bearer " + SUPA_KEY
+    }
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error("載入失敗: " + r.status);
+    return r.json();
+  })
+  .then(function(rows){
+    if(!rows || rows.length === 0){
+      console.log("☁️ 雲端沒有資料,使用本地");
+      return;
+    }
+    
+    // 把展開的行重新組合成 visitRecords 格式
+    var recordMap = {};
+    rows.forEach(function(row){
+      var key = row.record_date + "_" + row.store_id;
+      if(!recordMap[key]){
+        recordMap[key] = {
+          date: row.record_date,
+          store_id: row.store_id,
+          store_name: row.store_name,
+          items: [],
+          note: row.note || ""
+        };
+      }
+      recordMap[key].items.push({
+        id: row.sku_id,
+        name: row.sku_name,
+        ordered: String(row.quantity),
+        unit: row.unit
+      });
+    });
+    
+    var cloudRecords = Object.values(recordMap);
+    cloudRecords.sort(function(a,b){ return b.date.localeCompare(a.date); });
+    
+    // 比較本地和雲端數量,取多的那個(有新增就用雲端,本地有新的就合併)
+    if(cloudRecords.length >= visitRecords.length){
+      // 雲端資料比較多或一樣,用雲端的
+      visitRecords = cloudRecords;
+      saveVRecs();
+      console.log("✅ 從雲端載入 " + visitRecords.length + " 筆紀錄");
+    } else {
+      // 本地資料比較多(有新增還沒同步),合併
+      var cloudKeys = {};
+      cloudRecords.forEach(function(r){ cloudKeys[r.date+"_"+r.store_id] = true; });
+      var localOnly = visitRecords.filter(function(r){ return !cloudKeys[r.date+"_"+r.store_id]; });
+      visitRecords = cloudRecords.concat(localOnly);
+      visitRecords.sort(function(a,b){ return b.date.localeCompare(a.date); });
+      saveVRecs();
+      console.log("✅ 合併完成: 雲端 " + cloudRecords.length + " + 本地新增 " + localOnly.length + " = " + visitRecords.length + " 筆");
+    }
+    
+    renderRecHistory();
+  })
+  .catch(function(e){
+    console.error("❌ 雲端載入失敗:", e);
+    console.log("使用本地資料");
+  });
+}
+
 
 function loadStoreZones(){
   var baseUrl=window.location.href.replace(/index\.html.*$/,"");
@@ -1809,9 +1859,29 @@ function exportManagerPDF(){
     var lyOrders = summary.lyOrders || 0;
     var lyAmount = summary.lyAmount || 0;
     
-    // 取得商品明細(包含本月有/去年有的所有品項)
+    // 取得本月和去年同月的商品明細
     var storeMonthly = (typeof MONTHLY_DATA!=="undefined" && MONTHLY_DATA[st.id]) || {};
     var items = storeMonthly[month] || [];
+    
+    // 加入這家店所有歷史品項(從 STORE_SKUS_DATA),即使本月和去年都沒叫貨
+    var allSkus = (typeof STORE_SKUS_DATA!=="undefined" && STORE_SKUS_DATA[st.id]) || [];
+    var existingSkus = {};
+    items.forEach(function(it){ existingSkus[it[1]] = true; });
+    
+    // 把歷史曾經叫過但本月+去年都沒叫的品項補進去(數量都是0)
+    allSkus.forEach(function(sku){
+      if(!existingSkus[sku.sku_id]){
+        items.push([sku.sku_name, sku.sku_id, 0, 0]);
+      }
+    });
+    
+    // 排序: 本月有訂貨 > 去年有訂貨 > 兩邊都沒
+    items.sort(function(a,b){
+      var aHas = (a[2]>0 ? 2 : 0) + (a[3]>0 ? 1 : 0);
+      var bHas = (b[2]>0 ? 2 : 0) + (b[3]>0 ? 1 : 0);
+      if(aHas !== bHas) return bHas - aHas;
+      return (b[2]+b[3]) - (a[2]+a[3]);
+    });
     
     storeTotals[st.id] = {orders:orders, amount:amount, lyOrders:lyOrders, lyAmount:lyAmount};
     storeProducts[st.id] = items;
