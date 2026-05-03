@@ -1918,6 +1918,9 @@ function exportStorePDF(){
 
 function exportManagerPDF(){
   var month = document.getElementById("report-month").value;
+  console.log("📊 主管總覽 month:", month);
+  console.log("📊 SUMMARY_DATA S033:", SUMMARY_DATA["S033"] && SUMMARY_DATA["S033"][month]);
+  console.log("📊 MONTHLY_DATA S033:", MONTHLY_DATA["S033"] && MONTHLY_DATA["S033"][month]);
   if(!month){ alert("請先選擇月份"); return; }
   var yr = month.slice(0,4), mon = parseInt(month.slice(5,7));
 
@@ -1991,6 +1994,9 @@ function exportManagerPDF(){
     var storeBlocks = regStores.map(function(st){
       var t = storeTotals[st.id]||{orders:0,amount:0,lyOrders:0,lyAmount:0};
       var products = storeProducts[st.id]||[];
+      if(t.orders>0 || t.lyOrders>0){
+        console.log("📊", st.id, st.name, "→ products:", products.length, "orders:", t.orders, "lyOrders:", t.lyOrders);
+      }
       
       var amtPct = t.lyAmount>0 ? Math.round(((t.amount-t.lyAmount)/t.lyAmount)*100) : null;
       var amtPctStr = amtPct!==null ? (amtPct>0?"+":"")+amtPct+"%" : "—";
