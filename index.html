@@ -1191,10 +1191,16 @@ function renderSkuList(containerId,storeId,prefix){
   var html="";
   for(var i=0;i<skus.length;i++){
     var s=skus[i];
+    function _daysAgoText(d){
+      if(d === undefined || d === null) return "";
+      if(d === 0) return "今天";
+      if(d === 1) return "昨天";
+      return d + "天前";
+    }
     if(prefix==="stock"){
             html+="<div class=\"sku-row\">";
       html+="<div><div style=\"font-size:14px\">"+s.sku_name+"</div>";
-      var lastInfo=s.last_order?" · 上次 "+s.last_order+" ("+s.days_since+"天前)":"";
+      var lastInfo=s.last_order?" · 上次 "+s.last_order+" ("+_daysAgoText(s.days_since)+")":"";
       html+="<div style=\"font-size:11px;color:var(--text3)\">均量 "+s.recent_avg+" "+s.unit+" · 每 "+s.avg_gap+" 天"+lastInfo+"</div></div>";
       html+="<input class=\"sku-input\" type=\"number\" min=\"0\" placeholder=\"0\" id=\"si-"+s.sku_id+"\">";
       html+="<div style=\"font-size:12px;color:var(--text3);text-align:center\">"+s.unit+"</div>";
@@ -1202,7 +1208,7 @@ function renderSkuList(containerId,storeId,prefix){
     } else if(prefix==="rec"){
       
       html+="<div style=\"display:grid;grid-template-columns:1fr 90px;gap:7px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)\">";
-      var recLastInfo=s.last_order?" · 上次 "+s.last_order+" ("+s.days_since+"天前)":"";
+      var recLastInfo=s.last_order?" · 上次 "+s.last_order+" ("+_daysAgoText(s.days_since)+")":"";
       html+="<div><div style=\"font-size:13px\">"+s.sku_name+"</div><div style=\"font-size:11px;color:var(--text3)\">"+s.unit+recLastInfo+"</div></div>";
       html+="<input class=\"sku-input\" type=\"number\" min=\"0\" placeholder=\"0\" id=\"ro-"+s.sku_id+"\" style=\"font-size:14px;padding:6px 8px;border-color:rgba(79,142,247,.5)\">";
       html+="</div>";
@@ -1436,7 +1442,8 @@ function fillProductSelect(){
         };
       }
       allProducts[s.sku_name].store_count++;
-      if((s.days_since||999) <= 90) allProducts[s.sku_name].active_count++;
+      var ds = (s.days_since !== undefined && s.days_since !== null) ? s.days_since : 999;
+      if(ds <= 90) allProducts[s.sku_name].active_count++;
     });
     // 也把自訂品項加入
     var cust = customSKUs[st.id] || [];
@@ -1487,7 +1494,7 @@ function searchProductDistribution(){
           sku_id: s.sku_id,
           sku_name: s.sku_name,
           last_order: s.last_order || "",
-          days_since: s.days_since || 999,
+          days_since: (s.days_since !== undefined && s.days_since !== null) ? s.days_since : 999,
           recent_avg: s.recent_avg || 0,
           avg_gap: s.avg_gap || 0,
           unit: s.unit || "箱"
@@ -1539,7 +1546,8 @@ function searchProductDistribution(){
     html += "<div style='font-size:13px;font-weight:600'>" + s.store_name + "</div>";
     html += "<div style='font-size:11px;color:var(--text3);margin-top:2px'>";
     if(s.last_order){
-      html += "上次 " + s.last_order + " (" + s.days_since + "天前)";
+      var dsText = s.days_since === 0 ? "今天" : s.days_since === 1 ? "昨天" : s.days_since + "天前";
+      html += "上次 " + s.last_order + " (" + dsText + ")";
       if(s.recent_avg > 0){
         html += " · 均量 " + s.recent_avg + s.unit;
       }
