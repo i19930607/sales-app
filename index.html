@@ -1032,6 +1032,9 @@ function showPage(name,btn){
     document.getElementById("rec-today").textContent=(today.getMonth()+1)+"/"+(today.getDate())+" 週"+days[today.getDay()];
     renderRecHistory();
   }
+  if(name==="product"){
+    fillProductSelect();
+  }
 }
 
 // ── 叫貨預測 ──────────────────────────────────────────────────
@@ -2436,7 +2439,6 @@ function init(){
   checkUpcomingHolidays();
   ["sel-predict","sel-report","sel-addsku","sel-record"].forEach(fillSelect);
   buildRouteList();
-  fillProductSelect();
   
   // 找出 SUMMARY_DATA 中的最新月份(有資料的最新月)
   var latestMonth = null;
