@@ -101,6 +101,7 @@ if(navigator.deviceMemory){
   <div class="nav-tabs">
     <button class="tab active" onclick="showPage('predict',this)">叫貨預測</button>
     <button class="tab" onclick="showPage('route',this)">路線規劃</button>
+    <button class="tab" onclick="showPage('product',this)">產品分布</button>
     <button class="tab" onclick="showPage('newprod',this)">新品調研</button>
     <button class="tab" onclick="showPage('report',this)">月結報告</button>
     <button class="tab" onclick="showPage('addsku',this)">新增品項</button>
@@ -194,6 +195,18 @@ if(navigator.deviceMemory){
       <button class="btn btn-ghost" onclick="openRoute('waze')">Waze</button>
     </div>
   </div>
+</div>
+
+<!-- 產品分布 -->
+<div class="page" id="page-product">
+  <div class="card">
+    <div class="card-title">選擇產品</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px">查看此產品在哪些店有進貨,以及上次叫貨時間</div>
+    <select id="prod-select" onchange="searchProductDistribution()" style="width:100%;font-size:14px;padding:10px">
+      <option value="">-- 請選擇產品 --</option>
+    </select>
+  </div>
+  <div id="prod-search-result"></div>
 </div>
 
 <!-- 新品調研 -->
@@ -870,7 +883,87 @@ function getAllSkus(storeId){
   var cust=customSKUs[storeId]||[];
   var baseIds=base.map(function(s){return s.sku_id;});
   var extra=cust.filter(function(s){return baseIds.indexOf(s.sku_id)===-1;});
-  return extra.concat(base);
+  
+  // 用 visitRecords 動態更新每個 SKU 的最新 last_order, days_since, recent_avg, avg_gap
+  var combined = extra.concat(base).map(function(s){return Object.assign({}, s);}); // 複製
+  
+  // 收集這家店所有抄貨紀錄(visitRecords)的訂單日期和數量
+  var skuOrders = {}; // {sku_id: [{date, qty}]}
+  visitRecords.forEach(function(r){
+    if(r.store_id !== storeId) return;
+    r.items.forEach(function(it){
+      if(!skuOrders[it.id]) skuOrders[it.id] = [];
+      skuOrders[it.id].push({date: r.date, qty: parseFloat(it.ordered)||0});
+    });
+  });
+  
+  var now = new Date();
+  var ninetyDaysAgo = new Date(now.getTime() - 90*86400000);
+  
+  combined.forEach(function(s){
+    var newOrders = skuOrders[s.sku_id] || [];
+    if(newOrders.length === 0) {
+      // 沒有新抄貨,但仍要動態算 days_since (因為日期一直在變)
+      if(s.last_order){
+        var parts = s.last_order.split("/");
+        if(parts.length === 3){
+          var d = new Date(parts[0]+"-"+parts[1]+"-"+parts[2]);
+          s.days_since = Math.floor((now - d) / 86400000);
+        }
+      }
+      return;
+    }
+    
+    // 找出新抄貨中最新的日期
+    var newOrders_sorted = newOrders.slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
+    var latestNewDate = newOrders_sorted[0].date; // YYYY-MM-DD
+    var latestNewDateObj = new Date(latestNewDate);
+    
+    // 比對原本的 last_order
+    var origLastDate = null;
+    if(s.last_order){
+      var parts = s.last_order.split("/");
+      if(parts.length === 3){
+        origLastDate = new Date(parts[0]+"-"+parts[1]+"-"+parts[2]);
+      }
+    }
+    
+    // 如果新抄貨日期比原本的 last_order 新,更新
+    if(!origLastDate || latestNewDateObj > origLastDate){
+      s.last_order = latestNewDate.replace(/-/g, "/");
+      s.days_since = Math.floor((now - latestNewDateObj) / 86400000);
+      s.default_hidden = s.days_since > 180;
+    }
+    
+    // 更新近90天均量(包含新抄貨)
+    var recentNew = newOrders.filter(function(o){
+      return new Date(o.date) >= ninetyDaysAgo && o.qty > 0;
+    });
+    if(recentNew.length > 0){
+      // 把新抄貨的均量算進去(簡單平均)
+      var newAvg = recentNew.reduce(function(a,b){return a+b.qty;}, 0) / recentNew.length;
+      // 如果原本沒有 recent_avg 或新均量更高(代表有恢復叫貨),用新的
+      if(!s.recent_avg || newAvg > 0){
+        // 結合新舊資料: 新抄貨權重更高
+        s.recent_avg = Math.round(newAvg);
+      }
+    }
+    
+    // 更新訂貨間隔(基於最新的抄貨)
+    if(newOrders.length >= 2){
+      var dates = newOrders.map(function(o){return new Date(o.date);}).sort(function(a,b){return a-b;});
+      var gaps = [];
+      for(var i=1; i<dates.length; i++){
+        gaps.push((dates[i]-dates[i-1])/86400000);
+      }
+      if(gaps.length > 0){
+        var avgGap = gaps.reduce(function(a,b){return a+b;}, 0) / gaps.length;
+        s.avg_gap = Math.round(avgGap);
+      }
+    }
+  });
+  
+  return combined;
 }
 
 function getSkus(storeId){
@@ -1320,6 +1413,148 @@ function openRoute(app){
 }
 
 // ── 新品調研 ──────────────────────────────────────────────────
+
+// 填入產品下拉選單(所有店所有品項,去重)
+function fillProductSelect(){
+  var select = document.getElementById("prod-select");
+  if(!select) return;
+  
+  // 收集所有品項(去重,以 sku_name 為基準)
+  var allProducts = {};
+  STORES.forEach(function(st){
+    var skus = (typeof STORE_SKUS_DATA!=="undefined" && STORE_SKUS_DATA[st.id]) || [];
+    skus.forEach(function(s){
+      if(!s.sku_name) return;
+      if(!allProducts[s.sku_name]){
+        allProducts[s.sku_name] = {
+          name: s.sku_name,
+          unit: s.unit || "箱",
+          store_count: 0,
+          active_count: 0
+        };
+      }
+      allProducts[s.sku_name].store_count++;
+      if((s.days_since||999) <= 90) allProducts[s.sku_name].active_count++;
+    });
+    // 也把自訂品項加入
+    var cust = customSKUs[st.id] || [];
+    cust.forEach(function(s){
+      if(!s.sku_name) return;
+      if(!allProducts[s.sku_name]){
+        allProducts[s.sku_name] = {name: s.sku_name, unit: s.unit||"箱", store_count: 0, active_count: 0};
+      }
+    });
+  });
+  
+  // 排序:活躍店數多的優先
+  var sorted = Object.values(allProducts).sort(function(a, b){
+    if(a.active_count !== b.active_count) return b.active_count - a.active_count;
+    return b.store_count - a.store_count;
+  });
+  
+  var html = "<option value=''>-- 請選擇產品 (" + sorted.length + " 個) --</option>";
+  sorted.forEach(function(p){
+    html += "<option value='" + p.name.replace(/'/g, "&apos;") + "'>"
+      + p.name + "　[" + p.active_count + "/" + p.store_count + "店活躍]"
+      + "</option>";
+  });
+  select.innerHTML = html;
+}
+
+// 產品分布查詢: 找出哪些店有這個產品,及上次叫貨時間
+function searchProductDistribution(){
+  var query = document.getElementById("prod-select").value;
+  var resultDiv = document.getElementById("prod-search-result");
+  
+  if(!query){
+    resultDiv.innerHTML = "";
+    return;
+  }
+  
+  // 在所有店的 SKU 裡搜尋(用 getAllSkus 包含 visitRecords 的最新資料)
+  var matches = [];
+  
+  STORES.forEach(function(st){
+    var skus = getAllSkus(st.id);
+    skus.forEach(function(s){
+      if(s.sku_name === query){
+        matches.push({
+          store_id: st.id,
+          store_name: st.name,
+          region: st.region,
+          sku_id: s.sku_id,
+          sku_name: s.sku_name,
+          last_order: s.last_order || "",
+          days_since: s.days_since || 999,
+          recent_avg: s.recent_avg || 0,
+          avg_gap: s.avg_gap || 0,
+          unit: s.unit || "箱"
+        });
+      }
+    });
+  });
+  
+  if(matches.length === 0){
+    resultDiv.innerHTML = "<div class='card' style='text-align:center;color:var(--text3)'>沒有找到相關產品</div>";
+    return;
+  }
+  
+  // 排序:近期叫貨頻率(days_since 小的優先)
+  matches.sort(function(a, b){ return a.days_since - b.days_since; });
+  
+  // 統計
+  var active = matches.filter(function(s){ return s.days_since <= 90; }).length;
+  var medium = matches.filter(function(s){ return s.days_since > 90 && s.days_since <= 180; }).length;
+  var dropped = matches.filter(function(s){ return s.days_since > 180; }).length;
+  
+  var html = "<div class='card'>";
+  html += "<div style='font-size:14px;font-weight:600;margin-bottom:6px'>" + query + "</div>";
+  html += "<div style='font-size:12px;color:var(--text3);margin-bottom:14px'>共 " + matches.length + " 家店有歷史紀錄</div>";
+  
+  // 統計卡
+  html += "<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px'>";
+  html += "<div style='background:rgba(39,174,96,0.15);padding:10px;border-radius:8px;text-align:center'>";
+  html += "<div style='font-size:20px;font-weight:700;color:#27ae60'>" + active + "</div>";
+  html += "<div style='font-size:10px;color:var(--text3)'>活躍 (≤90天)</div></div>";
+  html += "<div style='background:rgba(243,156,18,0.15);padding:10px;border-radius:8px;text-align:center'>";
+  html += "<div style='font-size:20px;font-weight:700;color:#f39c12'>" + medium + "</div>";
+  html += "<div style='font-size:10px;color:var(--text3)'>減少 (91-180天)</div></div>";
+  html += "<div style='background:rgba(192,57,43,0.15);padding:10px;border-radius:8px;text-align:center'>";
+  html += "<div style='font-size:20px;font-weight:700;color:#c0392b'>" + dropped + "</div>";
+  html += "<div style='font-size:10px;color:var(--text3)'>已下架 (>180天)</div></div>";
+  html += "</div>";
+  
+  // 列表
+  html += "<div style='display:grid;grid-template-columns:1fr;gap:6px'>";
+  matches.forEach(function(s){
+    var statusColor = s.days_since <= 90 ? "#27ae60" 
+      : s.days_since <= 180 ? "#f39c12" : "#c0392b";
+    var statusText = s.days_since <= 90 ? "活躍"
+      : s.days_since <= 180 ? "減少" : "下架";
+    
+    html += "<div style='display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px;background:rgba(0,0,0,0.15);border-radius:6px'>";
+    html += "<div>";
+    html += "<div style='font-size:13px;font-weight:600'>" + s.store_name + "</div>";
+    html += "<div style='font-size:11px;color:var(--text3);margin-top:2px'>";
+    if(s.last_order){
+      html += "上次 " + s.last_order + " (" + s.days_since + "天前)";
+      if(s.recent_avg > 0){
+        html += " · 均量 " + s.recent_avg + s.unit;
+      }
+    } else {
+      html += "無歷史紀錄";
+    }
+    html += "</div>";
+    html += "</div>";
+    html += "<div style='font-size:11px;color:" + statusColor + ";font-weight:600;padding:4px 10px;background:rgba(0,0,0,0.2);border-radius:12px'>" + statusText + "</div>";
+    html += "</div>";
+  });
+  html += "</div>";
+  html += "</div>";
+  
+  resultDiv.innerHTML = html;
+}
+
 function analyzeProduct(){
   var name=document.getElementById("np-name").value.trim();
   if(!name){alert("請輸入產品名稱");return;}
@@ -2201,6 +2436,7 @@ function init(){
   checkUpcomingHolidays();
   ["sel-predict","sel-report","sel-addsku","sel-record"].forEach(fillSelect);
   buildRouteList();
+  fillProductSelect();
   
   // 找出 SUMMARY_DATA 中的最新月份(有資料的最新月)
   var latestMonth = null;
