@@ -1,258 +1,258 @@
 {
   "taipei": [
     {
-      "tmax": 27,
-      "tmin": 24,
-      "rain": 16.8,
-      "rainProb": 96,
-      "wcode": 80
-    },
-    {
       "tmax": 29,
-      "tmin": 24,
-      "rain": 0.9,
-      "rainProb": 89,
-      "wcode": 51
-    },
-    {
-      "tmax": 33,
       "tmin": 25,
-      "rain": 8.6,
-      "rainProb": 97,
-      "wcode": 81
+      "rain": 0.6,
+      "rainProb": 96,
+      "wcode": 51
     },
     {
       "tmax": 32,
       "tmin": 25,
-      "rain": 14.4,
-      "rainProb": 93,
-      "wcode": 81
+      "rain": 2.9,
+      "rainProb": 97,
+      "wcode": 53
     },
     {
-      "tmax": 27,
-      "tmin": 24,
-      "rain": 42.9,
-      "rainProb": 99,
-      "wcode": 63
-    },
-    {
-      "tmax": 24,
-      "tmin": 21,
-      "rain": 94.8,
-      "rainProb": 95,
-      "wcode": 63
+      "tmax": 31,
+      "tmin": 25,
+      "rain": 32.8,
+      "rainProb": 97,
+      "wcode": 82
     },
     {
       "tmax": 26,
-      "tmin": 20,
-      "rain": 11.4,
+      "tmin": 25,
+      "rain": 92.2,
+      "rainProb": 96,
+      "wcode": 65
+    },
+    {
+      "tmax": 25,
+      "tmin": 23,
+      "rain": 63.3,
       "rainProb": 86,
+      "wcode": 65
+    },
+    {
+      "tmax": 28,
+      "tmin": 21,
+      "rain": 0.0,
+      "rainProb": 63,
+      "wcode": 3
+    },
+    {
+      "tmax": 28,
+      "tmin": 21,
+      "rain": 27.0,
+      "rainProb": 67,
       "wcode": 63
     }
   ],
   "new_taipei": [
     {
-      "tmax": 27,
-      "tmin": 25,
-      "rain": 20.1,
-      "rainProb": 96,
-      "wcode": 80
-    },
-    {
       "tmax": 29,
-      "tmin": 24,
-      "rain": 6.7,
-      "rainProb": 89,
-      "wcode": 55
+      "tmin": 25,
+      "rain": 3.3,
+      "rainProb": 96,
+      "wcode": 53
     },
     {
-      "tmax": 33,
+      "tmax": 32,
       "tmin": 25,
-      "rain": 5.9,
+      "rain": 4.7,
       "rainProb": 97,
-      "wcode": 80
+      "wcode": 61
     },
     {
-      "tmax": 33,
+      "tmax": 30,
       "tmin": 25,
-      "rain": 9.3,
-      "rainProb": 93,
-      "wcode": 80
+      "rain": 28.7,
+      "rainProb": 97,
+      "wcode": 82
     },
     {
-      "tmax": 28,
+      "tmax": 26,
       "tmin": 25,
-      "rain": 55.2,
-      "rainProb": 99,
-      "wcode": 65
-    },
-    {
-      "tmax": 24,
-      "tmin": 21,
-      "rain": 74.7,
-      "rainProb": 95,
-      "wcode": 63
+      "rain": 87.3,
+      "rainProb": 96,
+      "wcode": 81
     },
     {
       "tmax": 25,
-      "tmin": 20,
-      "rain": 10.8,
+      "tmin": 23,
+      "rain": 76.8,
       "rainProb": 86,
-      "wcode": 61
+      "wcode": 65
+    },
+    {
+      "tmax": 29,
+      "tmin": 21,
+      "rain": 0.0,
+      "rainProb": 63,
+      "wcode": 3
+    },
+    {
+      "tmax": 28,
+      "tmin": 21,
+      "rain": 30.0,
+      "rainProb": 67,
+      "wcode": 63
     }
   ],
   "taoyuan": [
     {
-      "tmax": 27,
+      "tmax": 29,
       "tmin": 25,
-      "rain": 12.4,
-      "rainProb": 99,
-      "wcode": 80
+      "rain": 1.9,
+      "rainProb": 78,
+      "wcode": 51
     },
     {
-      "tmax": 28,
+      "tmax": 32,
       "tmin": 24,
-      "rain": 3.5,
-      "rainProb": 82,
-      "wcode": 53
-    },
-    {
-      "tmax": 31,
-      "tmin": 25,
-      "rain": 6.5,
-      "rainProb": 93,
+      "rain": 8.4,
+      "rainProb": 91,
       "wcode": 81
     },
     {
       "tmax": 32,
       "tmin": 25,
-      "rain": 5.7,
-      "rainProb": 77,
-      "wcode": 80
-    },
-    {
-      "tmax": 28,
-      "tmin": 24,
-      "rain": 64.8,
-      "rainProb": 98,
-      "wcode": 81
-    },
-    {
-      "tmax": 24,
-      "tmin": 20,
-      "rain": 112.5,
-      "rainProb": 92,
-      "wcode": 63
+      "rain": 36.6,
+      "rainProb": 96,
+      "wcode": 82
     },
     {
       "tmax": 26,
-      "tmin": 19,
-      "rain": 19.5,
+      "tmin": 24,
+      "rain": 129.9,
+      "rainProb": 98,
+      "wcode": 65
+    },
+    {
+      "tmax": 24,
+      "tmin": 22,
+      "rain": 87.3,
       "rainProb": 90,
+      "wcode": 65
+    },
+    {
+      "tmax": 28,
+      "tmin": 21,
+      "rain": 0.0,
+      "rainProb": 63,
+      "wcode": 3
+    },
+    {
+      "tmax": 28,
+      "tmin": 21,
+      "rain": 48.9,
+      "rainProb": 68,
       "wcode": 63
     }
   ],
   "hsinchu": [
     {
-      "tmax": 28,
-      "tmin": 25,
-      "rain": 8.3,
-      "rainProb": 90,
-      "wcode": 63
-    },
-    {
       "tmax": 29,
       "tmin": 25,
-      "rain": 5.1,
-      "rainProb": 83,
-      "wcode": 61
+      "rain": 2.0,
+      "rainProb": 90,
+      "wcode": 51
+    },
+    {
+      "tmax": 31,
+      "tmin": 24,
+      "rain": 13.1,
+      "rainProb": 79,
+      "wcode": 95
     },
     {
       "tmax": 31,
       "tmin": 25,
-      "rain": 1.7,
-      "rainProb": 83,
-      "wcode": 53
+      "rain": 33.1,
+      "rainProb": 94,
+      "wcode": 82
     },
     {
-      "tmax": 32,
-      "tmin": 26,
-      "rain": 4.1,
-      "rainProb": 80,
-      "wcode": 55
-    },
-    {
-      "tmax": 27,
+      "tmax": 26,
       "tmin": 24,
-      "rain": 124.8,
-      "rainProb": 97,
-      "wcode": 65
-    },
-    {
-      "tmax": 24,
-      "tmin": 20,
-      "rain": 147.3,
+      "rain": 159.3,
       "rainProb": 99,
       "wcode": 65
     },
     {
       "tmax": 25,
-      "tmin": 19,
-      "rain": 34.8,
-      "rainProb": 94,
+      "tmin": 23,
+      "rain": 154.5,
+      "rainProb": 98,
+      "wcode": 65
+    },
+    {
+      "tmax": 28,
+      "tmin": 22,
+      "rain": 0.0,
+      "rainProb": 71,
+      "wcode": 3
+    },
+    {
+      "tmax": 24,
+      "tmin": 22,
+      "rain": 61.2,
+      "rainProb": 77,
       "wcode": 63
     }
   ],
   "miaoli": [
     {
-      "tmax": 28,
-      "tmin": 24,
-      "rain": 16.0,
-      "rainProb": 88,
-      "wcode": 81
-    },
-    {
       "tmax": 29,
-      "tmin": 23,
-      "rain": 2.2,
-      "rainProb": 70,
-      "wcode": 53
+      "tmin": 24,
+      "rain": 4.5,
+      "rainProb": 74,
+      "wcode": 61
     },
     {
-      "tmax": 32,
+      "tmax": 31,
       "tmin": 25,
-      "rain": 2.0,
-      "rainProb": 87,
-      "wcode": 95
+      "rain": 7.6,
+      "rainProb": 85,
+      "wcode": 80
     },
     {
-      "tmax": 32,
-      "tmin": 26,
-      "rain": 7.4,
-      "rainProb": 99,
+      "tmax": 30,
+      "tmin": 24,
+      "rain": 21.0,
+      "rainProb": 100,
       "wcode": 81
     },
     {
-      "tmax": 26,
+      "tmax": 25,
       "tmin": 24,
-      "rain": 77.4,
+      "rain": 143.3,
       "rainProb": 100,
       "wcode": 65
     },
     {
       "tmax": 24,
-      "tmin": 21,
-      "rain": 133.2,
-      "rainProb": 100,
+      "tmin": 22,
+      "rain": 157.8,
+      "rainProb": 95,
       "wcode": 65
     },
     {
+      "tmax": 28,
+      "tmin": 22,
+      "rain": 0.0,
+      "rainProb": 67,
+      "wcode": 3
+    },
+    {
       "tmax": 24,
-      "tmin": 21,
-      "rain": 77.4,
-      "rainProb": 94,
-      "wcode": 65
+      "tmin": 23,
+      "rain": 56.7,
+      "rainProb": 76,
+      "wcode": 63
     }
   ],
-  "updated": "2026-06-04 23:07"
+  "updated": "2026-06-05 23:06"
 }
