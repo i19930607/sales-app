@@ -1,3 +1,258 @@
 {
-  "updated": "2026-09-02 23:50"
+  "taipei": [
+    {
+      "tmax": 27,
+      "tmin": 25,
+      "rain": 22.2,
+      "rainProb": 93,
+      "wcode": 95
+    },
+    {
+      "tmax": 30,
+      "tmin": 24,
+      "rain": 9.6,
+      "rainProb": 98,
+      "wcode": 81
+    },
+    {
+      "tmax": 28,
+      "tmin": 24,
+      "rain": 31.3,
+      "rainProb": 58,
+      "wcode": 95
+    },
+    {
+      "tmax": 31,
+      "tmin": 23,
+      "rain": 1.6,
+      "rainProb": 78,
+      "wcode": 51
+    },
+    {
+      "tmax": 31,
+      "tmin": 21,
+      "rain": 0.0,
+      "rainProb": 59,
+      "wcode": 3
+    },
+    {
+      "tmax": 30,
+      "tmin": 21,
+      "rain": 1.2,
+      "rainProb": 59,
+      "wcode": 51
+    },
+    {
+      "tmax": 30,
+      "tmin": 22,
+      "rain": 3.9,
+      "rainProb": 56,
+      "wcode": 53
+    }
+  ],
+  "new_taipei": [
+    {
+      "tmax": 27,
+      "tmin": 25,
+      "rain": 11.8,
+      "rainProb": 93,
+      "wcode": 80
+    },
+    {
+      "tmax": 31,
+      "tmin": 24,
+      "rain": 11.4,
+      "rainProb": 98,
+      "wcode": 81
+    },
+    {
+      "tmax": 28,
+      "tmin": 24,
+      "rain": 49.9,
+      "rainProb": 58,
+      "wcode": 96
+    },
+    {
+      "tmax": 32,
+      "tmin": 24,
+      "rain": 1.8,
+      "rainProb": 78,
+      "wcode": 53
+    },
+    {
+      "tmax": 31,
+      "tmin": 22,
+      "rain": 0.0,
+      "rainProb": 59,
+      "wcode": 1
+    },
+    {
+      "tmax": 30,
+      "tmin": 21,
+      "rain": 3.3,
+      "rainProb": 59,
+      "wcode": 53
+    },
+    {
+      "tmax": 30,
+      "tmin": 22,
+      "rain": 6.9,
+      "rainProb": 56,
+      "wcode": 80
+    }
+  ],
+  "taoyuan": [
+    {
+      "tmax": 28,
+      "tmin": 25,
+      "rain": 17.0,
+      "rainProb": 96,
+      "wcode": 95
+    },
+    {
+      "tmax": 30,
+      "tmin": 24,
+      "rain": 12.7,
+      "rainProb": 88,
+      "wcode": 82
+    },
+    {
+      "tmax": 28,
+      "tmin": 24,
+      "rain": 49.3,
+      "rainProb": 51,
+      "wcode": 95
+    },
+    {
+      "tmax": 30,
+      "tmin": 23,
+      "rain": 1.1,
+      "rainProb": 71,
+      "wcode": 51
+    },
+    {
+      "tmax": 29,
+      "tmin": 21,
+      "rain": 0.0,
+      "rainProb": 57,
+      "wcode": 1
+    },
+    {
+      "tmax": 29,
+      "tmin": 20,
+      "rain": 1.8,
+      "rainProb": 59,
+      "wcode": 51
+    },
+    {
+      "tmax": 28,
+      "tmin": 22,
+      "rain": 7.5,
+      "rainProb": 64,
+      "wcode": 53
+    }
+  ],
+  "hsinchu": [
+    {
+      "tmax": 29,
+      "tmin": 26,
+      "rain": 5.9,
+      "rainProb": 100,
+      "wcode": 80
+    },
+    {
+      "tmax": 30,
+      "tmin": 25,
+      "rain": 0.8,
+      "rainProb": 76,
+      "wcode": 51
+    },
+    {
+      "tmax": 28,
+      "tmin": 24,
+      "rain": 53.4,
+      "rainProb": 51,
+      "wcode": 96
+    },
+    {
+      "tmax": 30,
+      "tmin": 24,
+      "rain": 0.0,
+      "rainProb": 62,
+      "wcode": 1
+    },
+    {
+      "tmax": 30,
+      "tmin": 23,
+      "rain": 0.0,
+      "rainProb": 42,
+      "wcode": 1
+    },
+    {
+      "tmax": 29,
+      "tmin": 21,
+      "rain": 0.3,
+      "rainProb": 41,
+      "wcode": 51
+    },
+    {
+      "tmax": 29,
+      "tmin": 23,
+      "rain": 0.0,
+      "rainProb": 53,
+      "wcode": 1
+    }
+  ],
+  "miaoli": [
+    {
+      "tmax": 28,
+      "tmin": 25,
+      "rain": 24.4,
+      "rainProb": 100,
+      "wcode": 96
+    },
+    {
+      "tmax": 30,
+      "tmin": 24,
+      "rain": 0.1,
+      "rainProb": 68,
+      "wcode": 51
+    },
+    {
+      "tmax": 27,
+      "tmin": 24,
+      "rain": 40.1,
+      "rainProb": 44,
+      "wcode": 95
+    },
+    {
+      "tmax": 30,
+      "tmin": 23,
+      "rain": 0.0,
+      "rainProb": 47,
+      "wcode": 2
+    },
+    {
+      "tmax": 29,
+      "tmin": 22,
+      "rain": 0.0,
+      "rainProb": 26,
+      "wcode": 0
+    },
+    {
+      "tmax": 29,
+      "tmin": 21,
+      "rain": 0.0,
+      "rainProb": 27,
+      "wcode": 0
+    },
+    {
+      "tmax": 28,
+      "tmin": 22,
+      "rain": 3.0,
+      "rainProb": 44,
+      "wcode": 51
+    }
+  ],
+  "updated": "2026-09-03 23:45"
 }
