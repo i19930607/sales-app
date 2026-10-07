@@ -1,14 +1,14 @@
 {
   "taipei": [
     {
-      "tmax": 25,
+      "tmax": 26,
       "tmin": 22,
-      "rain": 0.8,
-      "rainProb": 84,
-      "wcode": 51
+      "rain": 0.0,
+      "rainProb": 0,
+      "wcode": 3
     },
     {
-      "tmax": 25,
+      "tmax": 27,
       "tmin": 21,
       "rain": 0.0,
       "rainProb": 0,
@@ -16,37 +16,37 @@
     },
     {
       "tmax": 27,
-      "tmin": 22,
-      "rain": 0.0,
-      "rainProb": 0,
-      "wcode": 3
-    },
-    {
-      "tmax": 28,
       "tmin": 21,
-      "rain": 0.0,
-      "rainProb": 29,
-      "wcode": 3
+      "rain": 0.1,
+      "rainProb": 16,
+      "wcode": 51
+    },
+    {
+      "tmax": 28,
+      "tmin": 23,
+      "rain": 0.1,
+      "rainProb": 17,
+      "wcode": 51
     },
     {
       "tmax": 28,
       "tmin": 22,
-      "rain": 0.0,
-      "rainProb": 25,
-      "wcode": 3
+      "rain": 0.9,
+      "rainProb": 16,
+      "wcode": 51
     },
     {
-      "tmax": 29,
-      "tmin": 22,
+      "tmax": 28,
+      "tmin": 23,
       "rain": 0.0,
       "rainProb": 20,
       "wcode": 2
     },
     {
-      "tmax": 27,
-      "tmin": 21,
+      "tmax": 29,
+      "tmin": 22,
       "rain": 0.0,
-      "rainProb": 24,
+      "rainProb": 27,
       "wcode": 3
     }
   ],
@@ -54,13 +54,6 @@
     {
       "tmax": 26,
       "tmin": 22,
-      "rain": 0.5,
-      "rainProb": 84,
-      "wcode": 51
-    },
-    {
-      "tmax": 26,
-      "tmin": 22,
       "rain": 0.0,
       "rainProb": 0,
       "wcode": 3
@@ -75,49 +68,49 @@
     {
       "tmax": 28,
       "tmin": 22,
-      "rain": 0.1,
-      "rainProb": 29,
+      "rain": 0.6,
+      "rainProb": 16,
       "wcode": 51
     },
     {
-      "tmax": 28,
-      "tmin": 23,
+      "tmax": 29,
+      "tmin": 24,
       "rain": 0.0,
-      "rainProb": 25,
+      "rainProb": 17,
       "wcode": 3
     },
     {
       "tmax": 29,
-      "tmin": 23,
+      "tmin": 22,
       "rain": 0.0,
-      "rainProb": 20,
+      "rainProb": 16,
       "wcode": 2
     },
     {
       "tmax": 28,
+      "tmin": 24,
+      "rain": 0.0,
+      "rainProb": 20,
+      "wcode": 3
+    },
+    {
+      "tmax": 30,
       "tmin": 22,
       "rain": 0.0,
-      "rainProb": 24,
-      "wcode": 2
+      "rainProb": 27,
+      "wcode": 3
     }
   ],
   "taoyuan": [
     {
       "tmax": 26,
       "tmin": 22,
-      "rain": 0.8,
-      "rainProb": 85,
-      "wcode": 51
-    },
-    {
-      "tmax": 26,
-      "tmin": 21,
       "rain": 0.0,
       "rainProb": 2,
       "wcode": 3
     },
     {
-      "tmax": 27,
+      "tmax": 28,
       "tmin": 22,
       "rain": 0.0,
       "rainProb": 0,
@@ -126,40 +119,40 @@
     {
       "tmax": 28,
       "tmin": 22,
-      "rain": 0.0,
-      "rainProb": 16,
-      "wcode": 3
+      "rain": 0.2,
+      "rainProb": 6,
+      "wcode": 51
     },
     {
       "tmax": 28,
       "tmin": 23,
-      "rain": 0.3,
-      "rainProb": 16,
+      "rain": 0.4,
+      "rainProb": 15,
+      "wcode": 51
+    },
+    {
+      "tmax": 29,
+      "tmin": 22,
+      "rain": 0.6,
+      "rainProb": 23,
       "wcode": 51
     },
     {
       "tmax": 29,
       "tmin": 23,
       "rain": 0.0,
-      "rainProb": 25,
+      "rainProb": 32,
       "wcode": 3
     },
     {
-      "tmax": 29,
+      "tmax": 30,
       "tmin": 22,
       "rain": 0.0,
-      "rainProb": 18,
-      "wcode": 2
+      "rainProb": 33,
+      "wcode": 3
     }
   ],
   "hsinchu": [
-    {
-      "tmax": 27,
-      "tmin": 22,
-      "rain": 0.1,
-      "rainProb": 30,
-      "wcode": 51
-    },
     {
       "tmax": 28,
       "tmin": 23,
@@ -178,49 +171,49 @@
       "tmax": 31,
       "tmin": 22,
       "rain": 0.0,
-      "rainProb": 0,
+      "rainProb": 4,
       "wcode": 3
-    },
-    {
-      "tmax": 31,
-      "tmin": 23,
-      "rain": 0.0,
-      "rainProb": 2,
-      "wcode": 1
     },
     {
       "tmax": 31,
       "tmin": 24,
       "rain": 0.0,
       "rainProb": 4,
-      "wcode": 0
+      "wcode": 2
     },
     {
-      "tmax": 32,
+      "tmax": 31,
+      "tmin": 24,
+      "rain": 0.0,
+      "rainProb": 14,
+      "wcode": 1
+    },
+    {
+      "tmax": 31,
       "tmin": 23,
       "rain": 0.0,
-      "rainProb": 6,
+      "rainProb": 16,
+      "wcode": 3
+    },
+    {
+      "tmax": 30,
+      "tmin": 21,
+      "rain": 0.0,
+      "rainProb": 10,
       "wcode": 0
     }
   ],
   "miaoli": [
     {
-      "tmax": 28,
+      "tmax": 29,
       "tmin": 22,
       "rain": 0.0,
-      "rainProb": 10,
-      "wcode": 3
+      "rainProb": 1,
+      "wcode": 2
     },
     {
-      "tmax": 28,
-      "tmin": 22,
-      "rain": 0.0,
-      "rainProb": 0,
-      "wcode": 3
-    },
-    {
-      "tmax": 30,
-      "tmin": 22,
+      "tmax": 31,
+      "tmin": 23,
       "rain": 0.0,
       "rainProb": 6,
       "wcode": 3
@@ -230,7 +223,7 @@
       "tmin": 22,
       "rain": 0.0,
       "rainProb": 0,
-      "wcode": 1
+      "wcode": 3
     },
     {
       "tmax": 30,
@@ -240,19 +233,26 @@
       "wcode": 0
     },
     {
-      "tmax": 31,
+      "tmax": 30,
       "tmin": 23,
       "rain": 0.0,
-      "rainProb": 6,
+      "rainProb": 8,
       "wcode": 0
     },
     {
-      "tmax": 29,
+      "tmax": 30,
       "tmin": 22,
       "rain": 0.0,
-      "rainProb": 0,
+      "rainProb": 2,
+      "wcode": 0
+    },
+    {
+      "tmax": 28,
+      "tmin": 21,
+      "rain": 0.0,
+      "rainProb": 2,
       "wcode": 0
     }
   ],
-  "updated": "2026-10-06 02:02"
+  "updated": "2026-10-07 01:12"
 }
